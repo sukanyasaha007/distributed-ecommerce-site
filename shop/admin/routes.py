@@ -77,11 +77,14 @@ def seller_products():
 def sold_products():
     if current_user.is_authenticated:
         name= current_user.name
-        soldproducts= SoldProducts.query.filter_by(name= name).first()
-        # for s in soldproducts:
-        print("soldproducts: ",soldproducts.name, 'product:', soldproducts.product, 'quantity sold:', soldproducts.quantity_sold)
-        sold= soldproducts.get_sold(sellername= soldproducts.name, prod= soldproducts.product)
-        print("sold:", sold)
-        return render_template('admin/sold_products.html', title='Sold Products', name= name, sold=sold, product=soldproducts.product)
+        soldproducts= SoldProducts.query.filter_by(name= name).all()
+        sold_quant={}
+        for s in soldproducts:
+            print("soldproducts: ",s.name, 'product:', s.product, 'quantity sold:', s.quantity_sold)
+            sold= s.get_sold(sellername= s.name, prod= s.product)
+            sold_quant[s.product]= s.quantity_sold
+            # print("sold:", sold)
+            print(sold_quant)
+        return render_template('admin/sold_products.html', title='Sold Products', name= name, sold=sold_quant)#, product=soldproducts.product)
 
         
