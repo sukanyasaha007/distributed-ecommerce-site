@@ -3,7 +3,8 @@ from shop import app,db,bcrypt
 from .forms import RegistrationForm,LoginForm
 from .models import User
 from .models import SellerProducts
-# from .models import SoldProducts
+from shop.products.models import SoldProducts
+
 
 from shop.products.models import Addproduct,Category,Brand
 import zeep
@@ -76,9 +77,11 @@ def seller_products():
 def sold_products():
     if current_user.is_authenticated:
         name= current_user.name
-        soldproducts= SoldProducts.query.filter_by(name= name).all()
-        for s in soldproducts:
-            print(soldproducts)
-        # sold= soldproducts.get_sold(self, sellername, prod)
-        return render_template('admin/sold_products.html', title='Sold Products', products=products, name= name)
+        soldproducts= SoldProducts.query.filter_by(name= name).first()
+        # for s in soldproducts:
+        print("soldproducts: ",soldproducts.name, 'product:', soldproducts.product, 'quantity sold:', soldproducts.quantity_sold)
+        sold= soldproducts.get_sold(sellername= soldproducts.name, prod= soldproducts.product)
+        print("sold:", sold)
+        return render_template('admin/sold_products.html', title='Sold Products', name= name, sold=sold, product=soldproducts.product)
+
         

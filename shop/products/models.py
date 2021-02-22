@@ -62,7 +62,7 @@ class SoldProducts(db.Model):
             raise HTTPException(code=415)
         else:
             if self.product== prod:
-                self.quantity_sold= quantity_sold
+                self.quantity_sold+= quantity_sold
                 return quantity_sold
 
     def __repr__(self):

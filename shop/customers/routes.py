@@ -47,6 +47,8 @@ def payment():
             db.session.commit()
             soldproducts= SoldProducts.query.filter_by(name=seller.name).first()
             sold= soldproducts.update_stock(sellername=seller.name, prod=product.name, quantity_sold=prod['quantity'])
+            print("sold",sold)
+            db.session.commit()
     return redirect(url_for('thanks'))
 
 
