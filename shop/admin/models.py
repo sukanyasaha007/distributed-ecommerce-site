@@ -14,14 +14,14 @@ class User(db.Model):
         return '<User %r>' % self.username
 
 
-# class SellerProducts(db.Model):
-#     id = db.Column(db.Integer, primary_key=True)
-#     name= db.Column(db.String(500),unique=False, nullable=False)
-#     email= db.Column(db.String(500),unique=False, nullable=False)
-#     products = db.Column(db.String(500),unique=False, nullable=False)
+class SellerProducts(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name= db.Column(db.String(500),unique=False, nullable=False)
+    email= db.Column(db.String(500),unique=False, nullable=False)
+    products = db.Column(db.String(500),unique=False, nullable=False)
 
-#     def __repr__(self):
-#         return 'products you hold: %r' % self.products
+    def __repr__(self):
+        return 'products you hold: %r' % self.products
 
     # def getprod(self):
     #     return self.products

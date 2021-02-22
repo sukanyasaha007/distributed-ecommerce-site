@@ -2,7 +2,9 @@ from flask import render_template,session, request,redirect,url_for,flash
 from shop import app,db,bcrypt
 from .forms import RegistrationForm,LoginForm
 from .models import User
-# from .models import SoldProducts,SellerProducts
+from .models import SellerProducts
+# from .models import SoldProducts
+
 from shop.products.models import Addproduct,Category,Brand
 import zeep
 import time
@@ -59,15 +61,15 @@ def admin_login():
 
 
 
-# @app.route('/seller/productslist', methods=['GET','POST'])
-# def seller_products():
-#     if current_user.is_authenticated:
-#         name= current_user.name
-#         products= SellerProducts.query.filter_by(name= name).all()
-#         # products_= SellerProducts.query.filter_by(name= name).getprod()
-#         print('products', products)
-#         # print(products_)
-#         return render_template('admin/seller_products.html', title='Seller Products', products=products, name= name)
+@app.route('/seller/productslist', methods=['GET','POST'])
+def seller_products():
+    if current_user.is_authenticated:
+        name= current_user.name
+        products= SellerProducts.query.filter_by(name= name).all()
+        # products_= SellerProducts.query.filter_by(name= name).getprod()
+        print('products', products)
+        # print(products_)
+        return render_template('admin/seller_products.html', title='Seller Products', products=products, name= name)
         
 
 # @app.route('/seller/soldproducts', methods=['GET','POST'])
