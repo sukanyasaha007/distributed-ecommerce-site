@@ -72,12 +72,13 @@ def seller_products():
         return render_template('admin/seller_products.html', title='Seller Products', products=products, name= name)
         
 
-# @app.route('/seller/soldproducts', methods=['GET','POST'])
-# def seller_products():
-#     if current_user.is_authenticated:
-#         name= current_user.name
-#         products= SoldProducts.query.filter_by(name= name).all()
-#         products= SoldProducts.query.filter_by(name= name).all()
-#         print('products', products)
-#         return render_template('admin/sold_products.html', title='Sold Products', products=products, name= name)
+@app.route('/seller/soldproducts', methods=['GET','POST'])
+def sold_products():
+    if current_user.is_authenticated:
+        name= current_user.name
+        soldproducts= SoldProducts.query.filter_by(name= name).all()
+        for s in soldproducts:
+            print(soldproducts)
+        # sold= soldproducts.get_sold(self, sellername, prod)
+        return render_template('admin/sold_products.html', title='Sold Products', products=products, name= name)
         

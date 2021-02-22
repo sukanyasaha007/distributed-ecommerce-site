@@ -51,15 +51,27 @@ class SoldProducts(db.Model):
     email= db.Column(db.String(500),unique=False, nullable=False)
     product = db.Column(db.String(500),unique=False, nullable=False)
     quantity_sold= db.Column(db.Integer, nullable=False)
-    def get_or_415(self, pk):
-        instance = self.get(pk)
-        if not instance:
+    def get_sold(self, sellername, prod):
+        self.sellername= sellername
+        if self.sellername== self.name:
+            if self.product== prod:
+                return self.quantity_sold
+    def update_stock(self, sellername, prod, quantity_sold):
+        self.sellername= sellername
+        if not self.sellername== self.name:
             raise HTTPException(code=415)
-        return instance
+        else:
+            if self.product== prod:
+                self.quantity_sold= quantity_sold
+                return quantity_sold
+
+    def __repr__(self):
+        return '<Catgory %r>' % self.name
+        # return instance
     # def __repr__(self):
     #     return 'product {} sold {}'.format(self.product, self.quantity_sold)
 
 
-# db.create_all()
+db.create_all()
 
-SoldProducts().get_or_415(name='Sukanya Saha')
+# SoldProducts().get_or_415(name='Sukanya Saha')

@@ -44,23 +44,9 @@ def payment():
         for key, prod in orders.orders.items():
             product = Addproduct.query.get_or_404(key)
             product.stock = product.stock-prod['quantity']
-            # print(product.stock-prod['quantity'])
             db.session.commit()
-            print("seller: ", seller.name)
-            # print(SoldProducts.query.filter_by(name=seller).all())
-            # print(SoldProducts.query.get_or_404(name=seller))
-            sellerprods =  SoldProducts.query.filter_by(name = seller.name).all()
-            print("sold:", sellerprods)
-            # print("test1: ", sellerprods.name)
-            sellerprods= SoldProducts.query.get_or_404(name = seller.name).all()
-            print("sellerprods: ", sellerprods   )
-            print(sellerprods.sold_products_quantity_sold)
-
-
-                # soldproducts = SoldProducts(name=seller, email=current_user.email, product=product.name, quantity_sold=0)
-                # print(soldproducts)
-                # db.session.add(soldproducts)
-                # db.session.commit()
+            soldproducts= SoldProducts.query.filter_by(name=seller.name).first()
+            sold= soldproducts.update_stock(sellername=seller.name, prod=product.name, quantity_sold=prod['quantity'])
     return redirect(url_for('thanks'))
 
 
