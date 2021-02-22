@@ -79,12 +79,14 @@ def sold_products():
         name= current_user.name
         soldproducts= SoldProducts.query.filter_by(name= name).all()
         sold_quant={}
+        current_stock= {}
         for s in soldproducts:
-            print("soldproducts: ",s.name, 'product:', s.product, 'quantity sold:', s.quantity_sold)
+            print("soldproducts: ",s.name, 'product:', s.product, 'quantity sold:', s.quantity_sold, 'stock')#, s.stock)
             sold= s.get_sold(sellername= s.name, prod= s.product)
             sold_quant[s.product]= s.quantity_sold
-            # print("sold:", sold)
-            print(sold_quant)
-        return render_template('admin/sold_products.html', title='Sold Products', name= name, sold=sold_quant)#, product=soldproducts.product)
+            stock_prod= Addproduct.query.filter_by(name=s.product).first()
+            current_stock[s.product]=stock_prod.stock
+        print(current_stock)
+        return render_template('admin/sold_products.html', title='Sold Products', name= name, sold=sold_quant, current_stock= current_stock)#, product=soldproducts.product)
 
         

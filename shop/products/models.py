@@ -51,6 +51,8 @@ class SoldProducts(db.Model):
     email= db.Column(db.String(500),unique=False, nullable=False)
     product = db.Column(db.String(500),unique=False, nullable=False)
     quantity_sold= db.Column(db.Integer, nullable=False)
+    # stock= db.Column(db.Integer, nullable=False)
+
     def get_sold(self, sellername, prod):
         self.sellername= sellername
         if self.sellername== self.name:
@@ -63,6 +65,7 @@ class SoldProducts(db.Model):
         else:
             if self.product== prod:
                 self.quantity_sold+= quantity_sold
+                # self.stock-= self.stock
                 return quantity_sold
 
     def __repr__(self):

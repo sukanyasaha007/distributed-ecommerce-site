@@ -15,8 +15,8 @@ import random
 
 class ExampleService(ServiceBase):
 
-    @rpc(Unicode,Unicode, _returns=Unicode)
-    def slow_request(order):
+    @rpc( _returns=Unicode)
+    def slow_request():
         number = random.random()
         if(number < 0.95):
             return "Yes"

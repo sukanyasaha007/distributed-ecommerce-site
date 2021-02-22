@@ -56,7 +56,7 @@ def makeTransaction(order):
     transport = zeep.Transport(cache=None)
     client = zeep.Client("http://localhost:8000/?wsdl", transport=transport)
     st = time.time()
-    result = client.service.slow_request(order)  # takes 1 sec
+    result = client.service.slow_request()  # takes 1 sec
     print("Time: %.2f" % (time.time() - st))
     return result
 
