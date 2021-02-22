@@ -1,7 +1,7 @@
 from flask import render_template,session, request,redirect,url_for,flash,current_app
 from shop import app,db,photos, search
 from .models import Category,Brand,Addproduct
-# from shop.prducts.models import SoldProducts
+from .models import SoldProducts
 from .forms import Addproducts
 import secrets
 import os
@@ -149,15 +149,15 @@ def addproduct():
         image_1 = photos.save(request.files.get('image_1'), name=secrets.token_hex(10) + ".")
         image_2 = photos.save(request.files.get('image_2'), name=secrets.token_hex(10) + ".")
         image_3 = photos.save(request.files.get('image_3'), name=secrets.token_hex(10) + ".")
-        addproduct = Addproduct(name=name,price=price,discount=discount,stock=stock,colors=colors,description=description,category_id=category,brand_id=brand,image_1=image_1,image_2=image_2,image_3=image_3)
+        addproduct = Addproduct(name=name,price=price,discount=discount,stock=stock,colors=colors,desc=description,category_id=category,brand_id=brand,image_1=image_1,image_2=image_2,image_3=image_3)
         db.session.add(addproduct)
         db.session.commit()
-        # if current_user.is_authenticated:
-        #     sellername= current_user.name
-        #     soldproducts = SoldProducts(name=sellername, email=current_user.email, product=name, quantity_sold=0)
-        #     print(soldproducts)
-        #     db.session.add(soldproducts)
-        #     db.session.commit()
+        if current_user.is_authenticated:
+            sellername= current_user.name
+            soldproducts = SoldProducts(name=sellername, email=current_user.email, product=name, quantity_sold=0)
+            print(soldproducts)
+            db.session.add(soldproducts)
+            db.session.commit()
         flash(f'The product {name} was added in database','success')
         return redirect(url_for('admin'))
     return render_template('products/addproduct.html', form=form, title='Add a Product', brands=brands,categories=categories)
@@ -201,13 +201,13 @@ def updateproduct(id):
 
         flash('The product was updated','success')
         db.session.commit()
-        # if current_user.is_authenticated:            
-        #     sellername= current_user.name
-        #     if not SoldProducts.query.filter_by(name=sellername):
-        #         soldproducts = SoldProducts(name=sellername, email=current_user.email, product=product.name, quantity_sold=0)
-        #         print(soldproducts)
-        #         db.session.add(soldproducts)
-        #         db.session.commit()
+        if current_user.is_authenticated:            
+            sellername= current_user.name
+            if not SoldProducts.query.filter_by(name=sellername):
+                soldproducts = SoldProducts(name=sellername, email=current_user.email, product=product.name, quantity_sold=0)
+                print(soldproducts)
+                db.session.add(soldproducts)
+                db.session.commit()
         return redirect(url_for('admin'))
     form.name.data = product.name
     form.price.data = product.price

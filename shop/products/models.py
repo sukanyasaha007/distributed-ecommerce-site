@@ -1,6 +1,8 @@
 from shop import db
 from datetime import datetime
 
+from werkzeug.exceptions import HTTPException
+
 
 class Addproduct(db.Model):
     __seachbale__ = ['name','desc']
@@ -43,15 +45,21 @@ class Category(db.Model):
         return '<Catgory %r>' % self.name
 
 
-# class SoldProducts(db.Model):
-#     id = db.Column(db.Integer, primary_key=True)
-#     name= db.Column(db.String(500),unique=False, nullable=False)
-#     email= db.Column(db.String(500),unique=False, nullable=False)
-#     product = db.Column(db.String(500),unique=False, nullable=False)
-#     quantity_sold= db.Column(db.Integer, nullable=False)
+class SoldProducts(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name= db.Column(db.String(500),unique=False, nullable=False)
+    email= db.Column(db.String(500),unique=False, nullable=False)
+    product = db.Column(db.String(500),unique=False, nullable=False)
+    quantity_sold= db.Column(db.Integer, nullable=False)
+    def get_or_415(self, pk):
+        instance = self.get(pk)
+        if not instance:
+            raise HTTPException(code=415)
+        return instance
+    # def __repr__(self):
+    #     return 'product {} sold {}'.format(self.product, self.quantity_sold)
 
-#     def __repr__(self):
-#         return 'product {} sold {}'.format(self.product, self.quantity_sold)
 
+# db.create_all()
 
-db.create_all()
+SoldProducts().get_or_415(name='Sukanya Saha')
