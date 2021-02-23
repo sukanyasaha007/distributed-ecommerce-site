@@ -26,11 +26,4 @@ class SellerProducts(db.Model):
     # def getprod(self):
     #     return self.products
 
-
-class Rating(db.Model):
-    id = db.Column(db.Integer, primary_key= True)
-    sellername= db.Column(db.String(50), unique= False)
-    product= db.Column(db.String(50), unique= False)
-    rating = db.Column(db.Integer, unique= False)
-
 db.create_all()
