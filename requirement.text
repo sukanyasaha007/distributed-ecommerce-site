@@ -35,3 +35,6 @@ virtualenv-clone==0.5.3
 Werkzeug==0.15.6
 wrapt==1.11.2
 WTForms==2.2.1
+spyne
+grpc_tools
+grpcio
