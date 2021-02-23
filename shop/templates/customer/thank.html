@@ -1,5 +1,24 @@
 <h1>Thank you for shopping with us! </h1>
+<h2>Please Submit your feedback </h2>
+
+
+<form method="='POST", action="{{url_for('rating')}}">
+    {% for product in form.products %}
+    <tr>
+        <td>{{ product }}</td>
+    </tr>
+    {% endfor %}
+    {{ form.rating()}}
+</form>
 <!-- <h2>  </h2>
 
 sellername=seller.name, prod=product.name, quantity_sold=prod['quantity'], stock=product.stock -->
-
+<!-- 
+<div class="col-md-10">
+    <div class="text-center bg-info p-2 h4">Give your rating</div>
+            {% for prod in products %}
+            <option value="{{products.id}}">{{products.name}}</option>
+            {% endfor %}
+            {% endif %}
+</div>
+                 -->

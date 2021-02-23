@@ -1,10 +1,11 @@
 from flask import render_template,session, request,redirect,url_for,flash,current_app,make_response
 from flask_login import login_required, current_user, logout_user, login_user
 from shop import app,db,photos, search,bcrypt,login_manager
-from .forms import CustomerRegisterForm, CustomerLoginFrom
+from .forms import CustomerRegisterForm, CustomerLoginFrom, RatingForm
 from .model import Register,CustomerOrder
 from shop.products.models import Addproduct, SoldProducts
 from shop.products.routes import current_user as seller
+from shop.products.models import Rating
 
 import secrets
 import os
@@ -40,6 +41,7 @@ def payment():
     orders.status = 'Paid'
     db.session.commit()
     result= makeTransaction(order=invoice)
+    prods={}
     if result:
         for key, prod in orders.orders.items():
             product = Addproduct.query.get_or_404(key)
@@ -47,9 +49,9 @@ def payment():
             db.session.commit()
             soldproducts= SoldProducts.query.filter_by(name=seller.name).first()
             sold= soldproducts.update_stock(sellername=seller.name, prod=product.name, quantity_sold=prod['quantity'])
-            print("sold",sold)
+            prods[seller.name]= product.name
             db.session.commit()
-    return redirect(url_for('thanks'))
+    return redirect(url_for('thanks'), prods)
 
 
 def makeTransaction(order):
@@ -62,13 +64,17 @@ def makeTransaction(order):
 
 @app.route('/thanks')
 def thanks():
-    # form= RatingForm()
-    # if form.validate_on_submit():
-    #     rating= Rating(products=form.products, ratings=form.ratings)
-    #     db.session.add(rating)
-    #     flash(f'Thank you for submitting your rating', 'success')
-    #     db.session.commit()
     return render_template('customer/thank.html')
+
+@app.route('/rating', methods=['GET','POST'])
+def rating():
+    form= RatingForm()
+    if form.validate_on_submit():
+        rating= Rating(seller=form.sellername.data, products=form.product.data, ratings=form.rating.data)
+        db.session.add(rating)
+        flash(f'Thank you for submitting your rating', 'success')
+        db.session.commit()
+    return render_template('customer/index.html')
 
 @app.route('/customer/register', methods=['GET','POST'])
 def customer_register():

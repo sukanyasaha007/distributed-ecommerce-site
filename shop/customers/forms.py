@@ -1,4 +1,4 @@
-from wtforms import Form, StringField, TextAreaField, PasswordField,SubmitField,validators, ValidationError
+from wtforms import Form, StringField, TextAreaField, PasswordField,SubmitField,validators, ValidationError, SelectField
 from flask_wtf.file import FileRequired,FileAllowed, FileField
 from flask_wtf import FlaskForm
 from .model import Register
@@ -37,7 +37,12 @@ class CustomerLoginFrom(FlaskForm):
     password = PasswordField('Password: ', [validators.DataRequired()])
 
    
-
+class RatingForm():
+    products = SelectField('Product', choices = [('Clothes', 'Clothes'), ('Watch', 'Watch')])
+    rating = StringField('Rating ')
+    # subcategory_clothes = SelectField('Sub Category', choices = [('USPA', 'USPA'), ('LEE', 'LEE')], validators=[Optional()])
+    # subcategory_watches = SelectField('Sub Category', choices = [('Titan', 'Titan'), ('Fossil', 'Fossil')], validators=[Optional()])
+    submit = SubmitField('Submit')
 
 
 

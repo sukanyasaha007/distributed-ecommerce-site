@@ -25,9 +25,11 @@ class Register(db.Model, UserMixin):
     def __repr__(self):
         return '<Register %r>' % self.name
 
-# class Rating(db.Model):
-#     id = db.Column(db.Integer, primary_key= True)
-#     rating = db.Column(db.String(50), unique= False)
+class Rating(db.Model):
+    id = db.Column(db.Integer, primary_key= True)
+    sellername= db.Column(db.String(50), unique= False)
+    product= db.Column(db.String(50), unique= False)
+    rating = db.Column(db.Integer, unique= False)
 
 class JsonEcodedDict(db.TypeDecorator):
     impl = db.Text

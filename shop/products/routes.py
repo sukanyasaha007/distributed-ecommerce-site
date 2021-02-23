@@ -233,6 +233,6 @@ def deleteproduct(id):
         db.session.delete(product)
         db.session.commit()
         flash(f'The product {product.name} was delete from your record','success')
-        return redirect(url_for('adim'))
+        return redirect(url_for('admin'))
     flash(f'Can not delete the product','success')
     return redirect(url_for('admin'))
