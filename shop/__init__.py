@@ -3,6 +3,8 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_bcrypt import Bcrypt
 from flask_uploads import UploadSet, configure_uploads, IMAGES, patch_request_class
 import os
+import time
+import csv
 
 from flask_msearch import Search
 from flask_login import LoginManager
@@ -39,7 +41,25 @@ login_manager.needs_refresh_message_category='danger'
 login_manager.login_message = u"Please login first"
 
 
+
+
+def start_timer():
+    start_time = start_time = time.time()
+    return start_time
+
+
+def stop_timer(start_time, funct):
+    # output is in seconds
+    resp_time = (time.time() - start_time)
+    with open(r'/Users/sukanyasaha/Desktop/Distributed Systems/Assignments/Assignment 2/Assignment2-Sukanya/test1/latency_report.csv', 'a', newline='') as f:
+        csvwriter = csv.writer(f)
+        csvwriter.writerow([funct, str(resp_time)])
+    return
+
 from shop.products import routes
 from shop.admin import routes
 from shop.carts import carts
 from shop.customers import routes
+
+from flask import request
+

@@ -6,6 +6,7 @@ from .forms import Addproducts
 import secrets
 import os
 from flask_login import current_user
+import time
 
 def brands():
     brands = Brand.query.join(Addproduct, (Brand.id == Addproduct.brand_id)).all()
@@ -134,6 +135,8 @@ def deletecat(id):
 
 @app.route('/addproduct', methods=['GET','POST'])
 def addproduct():
+    if not session:
+        return "please login first"
     form = Addproducts(request.form)
     brands = Brand.query.all()
     categories = Category.query.all()
@@ -165,6 +168,8 @@ def addproduct():
 
 @app.route('/updateproduct/<int:id>', methods=['GET','POST'])
 def updateproduct(id):
+    if not session:
+        return "please login first"
     form = Addproducts(request.form)
     product = Addproduct.query.get_or_404(id)
     brands = Brand.query.all()

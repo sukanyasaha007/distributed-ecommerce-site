@@ -7,6 +7,7 @@ from .model import Register,CustomerOrder
 from shop.products.models import Addproduct, SoldProducts
 from shop.products.routes import current_user as seller
 # from .model import Rating
+from shop import start_timer, stop_timer
 
 import secrets
 import os
@@ -92,6 +93,8 @@ def customer_register():
 
 @app.route('/customer/login', methods=['GET','POST'])
 def customerLogin():
+    # print(time.time())
+    resp_time= start_timer()
     form = CustomerLoginFrom()
     if form.validate_on_submit():
         user = Register.query.filter_by(email=form.email.data).first()
@@ -99,10 +102,10 @@ def customerLogin():
             login_user(user)
             flash('You are login now!', 'success')
             next = request.args.get('next')
+            stop_timer(resp_time, "buyer_login")
             return redirect(next or url_for('home'))
         flash('Incorrect email and password','danger')
         return redirect(url_for('customerLogin'))
-            
     return render_template('customer/login.html', form=form)
 
 
