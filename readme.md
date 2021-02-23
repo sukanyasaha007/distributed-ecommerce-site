@@ -2,7 +2,7 @@
 
 
 UI Design and integration is learned from tutorial of Jamal Bugti
-link: https://www.youtube.com/playlist?list=PLYPlvTh05MsxJja9bzQCSTDu4hnEv5N_u
+
 
 
 
