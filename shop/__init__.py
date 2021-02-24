@@ -51,11 +51,7 @@ def start_timer():
 def stop_timer(start_time, funct):
     # output is in seconds
     resp_time = (time.time() - start_time)
-<<<<<<< HEAD
     with open(r'../latency_report.csv', 'a', newline='') as f:
-=======
-    with open(r'/Users/sukanyasaha/Desktop/Distributed Systems/Assignments/Assignment 2/Assignment2-Sukanya/test1/latency_report.csv', 'a', newline='') as f:
->>>>>>> 4f644a7666f725993749a5ac715381c04241900f
         csvwriter = csv.writer(f)
         csvwriter.writerow([funct, str(resp_time)])
     return
