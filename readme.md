@@ -2,14 +2,8 @@
 
 
 UI Design and integration is learned from tutorial of Jamal Bugti
-<<<<<<< HEAD
+
 link: https://www.youtube.com/playlist?list=PLYPlvTh05MsxJja9bzQCSTDu4hnEv5N_u
-=======
-
->>>>>>> 4f644a7666f725993749a5ac715381c04241900f
-
-
-
 
 JWT - JSON Web Token
 

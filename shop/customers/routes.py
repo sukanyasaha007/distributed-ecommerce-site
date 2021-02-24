@@ -8,11 +8,7 @@ from shop.products.models import Addproduct, SoldProducts
 from flask_login import current_user as buyer
 # from .model import Rating
 from shop import start_timer, stop_timer
-<<<<<<< HEAD
 import random
-=======
-
->>>>>>> 4f644a7666f725993749a5ac715381c04241900f
 import secrets
 import os
 import json
@@ -121,7 +117,6 @@ def customerLogin():
     # print(time.time())
     resp_time= start_timer()
     form = CustomerLoginFrom()
-<<<<<<< HEAD
     try:
         if form.validate_on_submit():
             input_request = AccountLoginRequest(buyer_username=form.email.data, buyer_password=form.password.data)
@@ -143,18 +138,6 @@ def customerLogin():
     except Exception as e:
         print(e)
     stop_timer(resp_time, "buyer_login")
-=======
-    if form.validate_on_submit():
-        user = Register.query.filter_by(email=form.email.data).first()
-        if user and bcrypt.check_password_hash(user.password, form.password.data):
-            login_user(user)
-            flash('You are login now!', 'success')
-            next = request.args.get('next')
-            stop_timer(resp_time, "buyer_login")
-            return redirect(next or url_for('home'))
-        flash('Incorrect email and password','danger')
-        return redirect(url_for('customerLogin'))
->>>>>>> 4f644a7666f725993749a5ac715381c04241900f
     return render_template('customer/login.html', form=form)
 
 

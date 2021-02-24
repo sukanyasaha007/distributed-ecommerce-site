@@ -34,12 +34,7 @@ def home():
 @app.route('/result')
 def result():
     searchword = request.args.get('q')
-    products = grpc_client.search(searchword)
-    newModelproducts =[]
-    for product in products:
-        newModelproducts.append(Addproduct(
-            id=product.
-        ))
+    products = Addproduct.query.msearch(searchword, fields=['name','desc'] , limit=6)
     return render_template('products/result.html',products=products,brands=brands(),categories=categories())
 
 @app.route('/product/<int:id>')
