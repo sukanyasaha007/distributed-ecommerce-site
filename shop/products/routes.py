@@ -6,6 +6,14 @@ from .forms import Addproducts
 import secrets
 import os
 from flask_login import current_user
+import time
+import grpc
+
+#GRPC params
+from ..grpc_ecommerce.protobufs.onlineshopping_pb2_grpc import BuyerActionsStub
+
+channel = grpc.insecure_channel("localhost:50051")
+grpc_client = BuyerActionsStub(channel)
 
 def brands():
     brands = Brand.query.join(Addproduct, (Brand.id == Addproduct.brand_id)).all()
@@ -26,7 +34,12 @@ def home():
 @app.route('/result')
 def result():
     searchword = request.args.get('q')
-    products = Addproduct.query.msearch(searchword, fields=['name','desc'] , limit=6)
+    products = grpc_client.search(searchword)
+    newModelproducts =[]
+    for product in products:
+        newModelproducts.append(Addproduct(
+            id=product.
+        ))
     return render_template('products/result.html',products=products,brands=brands(),categories=categories())
 
 @app.route('/product/<int:id>')
@@ -134,6 +147,8 @@ def deletecat(id):
 
 @app.route('/addproduct', methods=['GET','POST'])
 def addproduct():
+    if not session:
+        return "please login first"
     form = Addproducts(request.form)
     brands = Brand.query.all()
     categories = Category.query.all()
@@ -165,6 +180,8 @@ def addproduct():
 
 @app.route('/updateproduct/<int:id>', methods=['GET','POST'])
 def updateproduct(id):
+    if not session:
+        return "please login first"
     form = Addproducts(request.form)
     product = Addproduct.query.get_or_404(id)
     brands = Brand.query.all()

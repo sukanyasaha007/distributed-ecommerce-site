@@ -21,7 +21,7 @@ class Register(db.Model, UserMixin):
     zipcode = db.Column(db.String(50), unique= False)
     profile = db.Column(db.String(200), unique= False , default='profile.jpg')
     date_created = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
-
+    itemspurchased = db.Column(db.Integer, unique= False)
     def __repr__(self):
         return '<Register %r>' % self.name
 
