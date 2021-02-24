@@ -78,5 +78,5 @@ Login
 3. sudo su then navigate to app folder
 4. git clone https://github.com/sukanyasaha007/distributed-system-assignment2 --branch nmk
 5. docker pull nmk12345/grpc-image:latest
-6. docker -dt run <image-id> -p 5000:5000 
+6. docker run -dt -v $(pwd):/app <image-id> -p 5000:5000 
 7. docker exec -it <container> bash
