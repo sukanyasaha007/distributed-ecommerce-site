@@ -122,7 +122,7 @@ def updatecat(id):
         flash('Login first please','danger')
         return redirect(url_for('login'))
     updatecat = Category.query.get_or_404(id)
-    category = request.form.get('category')  
+    category = request.form.get('category')
     if request.method =="POST":
         updatecat.name = category
         flash(f'The category {updatecat.name} was changed to {category}','success')
@@ -189,10 +189,10 @@ def updateproduct(id):
     brand = request.form.get('brand')
     category = request.form.get('category')
     if request.method =="POST":
-        product.name = form.name.data 
+        product.name = form.name.data
         product.price = form.price.data
         product.discount = form.discount.data
-        product.stock = form.stock.data 
+        product.stock = form.stock.data
         product.colors = form.colors.data
         product.desc = form.description.data
         product.category_id = category
@@ -218,7 +218,7 @@ def updateproduct(id):
 
         flash('The product was updated','success')
         db.session.commit()
-        if current_user.is_authenticated:            
+        if current_user.is_authenticated:
             sellername= current_user.name
             if not SoldProducts.query.filter_by(name=sellername):
                 soldproducts = SoldProducts(name=sellername, email=current_user.email, product=product.name, quantity_sold=0)
