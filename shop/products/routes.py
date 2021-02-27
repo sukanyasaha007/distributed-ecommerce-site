@@ -1,19 +1,13 @@
 from flask import render_template,session, request,redirect,url_for,flash,current_app
-from shop import app,db,photos, search
+from shop import app,db,photos
 from .models import Category,Brand,Addproduct
 from .models import SoldProducts
 from .forms import Addproducts
 import secrets
 import os
 from flask_login import current_user
-import time
 import grpc
-
-#GRPC params
-from ..grpc_ecommerce.protobufs.onlineshopping_pb2_grpc import BuyerActionsStub
-
-channel = grpc.insecure_channel("localhost:50051")
-grpc_client = BuyerActionsStub(channel)
+from shop import grpc_client
 
 def brands():
     brands = Brand.query.join(Addproduct, (Brand.id == Addproduct.brand_id)).all()

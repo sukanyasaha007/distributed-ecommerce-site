@@ -39,7 +39,7 @@ class JsonEcodedDict(db.TypeDecorator):
             return json.loads(value)
 
 class CustomerOrder(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True, default=1)
     invoice = db.Column(db.String(20), unique=True, nullable=False)
     status = db.Column(db.String(20), default='Pending', nullable=False)
     customer_id = db.Column(db.Integer, unique=False, nullable=False)

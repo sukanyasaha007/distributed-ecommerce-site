@@ -10,6 +10,9 @@ from flask_msearch import Search
 from flask_login import LoginManager
 from flask_migrate import Migrate
 
+import grpc
+from shop.grpc_server.onlineshopping_pb2_grpc import BuyerActionsStub
+
 basedir = os.path.abspath(os.path.dirname(__file__))
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:@34.67.70.132/onlineshopping'
@@ -40,7 +43,9 @@ login_manager.login_view='customerLogin'
 login_manager.needs_refresh_message_category='danger'
 login_manager.login_message = u"Please login first"
 
-
+#GRPC params
+channel = grpc.secure_channel("grpc-server-vlhiisghja-uc.a.run.app:443", grpc.ssl_channel_credentials())
+grpc_client = BuyerActionsStub(channel)
 
 
 def start_timer():

@@ -1,8 +1,14 @@
 from flask import render_template,session, request,redirect,url_for,flash,current_app
 from shop import db , app
+from shop.grpc_server.onlineshopping_pb2_grpc import BuyerActionsStub
 from shop.products.models import Addproduct
 from shop.products.routes import brands, categories
+from flask_login import current_user
+from shop.grpc_server.onlineshopping_pb2 import SearchProductRequest, AddToCartRequest
 import json
+import grpc
+from shop.products.models import cart
+from shop import grpc_client
 
 def MagerDicts(dict1,dict2):
     if isinstance(dict1, list) and isinstance(dict2,list):
@@ -16,18 +22,24 @@ def AddCart():
         product_id = request.form.get('product_id')
         quantity = int(request.form.get('quantity'))
         color = request.form.get('colors')
-        product = Addproduct.query.filter_by(id=product_id).first()
-
+        item = SearchProductRequest(product=product_id)
+        response = grpc_client.search(item)
+        product = response.products
         if request.method =="POST":
-            DictItems = {product_id:{'name':product.name,'price':float(product.price),'discount':product.discount,'color':color,'quantity':quantity,'image':product.image_1, 'colors':product.colors}}
+            DictItems = {product_id:{'name':product[0].name,'price':float(product[0].price),'discount':product[0].discount,'color':color,'quantity':quantity,'image':product[0].image_1, 'colors':product[0].colors}}
             if 'Shoppingcart' in session:
                 print(session['Shoppingcart'])
                 if product_id in session['Shoppingcart']:
                     for key, item in session['Shoppingcart'].items():
                         if int(key) == int(product_id):
                             session.modified = True
+                            qty = cart.query.filter_by(product_id=product_id).first()
+                            print(qty)
+                            qty.stock += 1
+                            db.session.commit()
                             item['quantity'] += 1
                 else:
+                    grpc_client.addToCart(AddToCartRequest(customerId=str(current_user.id), products=response))
                     session['Shoppingcart'] = MagerDicts(session['Shoppingcart'], DictItems)
                     return redirect(request.referrer)
             else:
