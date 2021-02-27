@@ -5,10 +5,10 @@ from .forms import CustomerRegisterForm, CustomerLoginFrom
 # from .forms import  RatingForm
 from .model import Register,CustomerOrder
 from shop.products.models import Addproduct, SoldProducts
-from shop.products.routes import current_user as seller
+from flask_login import current_user as buyer
 # from .model import Rating
 from shop import start_timer, stop_timer
-
+import random
 import secrets
 import os
 import json
@@ -16,10 +16,17 @@ import pdfkit
 import stripe
 import zeep
 import time
+import grpc
 # from json import jsonify
 import traceback
+from shop.grpc_ecommerce.protobufs.onlineshopping_pb2 import AccountCreationRequest, AccountLoginRequest, SearchProductRequest, GetProduct
+from shop.grpc_ecommerce.protobufs.onlineshopping_pb2_grpc import BuyerActionsStub
 
 from flask import request, jsonify
+
+#GRPC params
+channel = grpc.insecure_channel("localhost:50051")
+grpc_client = BuyerActionsStub(channel)
 
 buplishable_key ='pk_test_51IN5nDCVZ5Yf06wRG9BLSKuBUaUqXKWKxbQPjAtHcsYdZgY0NiTG0aXIf25Ll29ItyhvnxjBa1FSUJPCo107MmCD00nkqBkcID'
 stripe.api_key ='sk_test_51IN5nDCVZ5Yf06wROWN3sRW7aVEhhCfo3obH4jNrU1MuzrOVeLS03hIwbs3UHOcL0v356Z01J1eP8rpcOZT6tQjF00HLVt218C'
@@ -49,8 +56,8 @@ def payment():
             product = Addproduct.query.get_or_404(key)
             product.stock = product.stock-prod['quantity']
             db.session.commit()
-            soldproducts= SoldProducts.query.filter_by(name=seller.name).first()
-            sold= soldproducts.update_stock(sellername=seller.name, prod=product.name, quantity_sold=prod['quantity'])
+            soldproducts= SoldProducts.query.filter_by(name=buyer.name).first()
+            sold= soldproducts.update_stock(sellername=buyer.name, prod=product.name, quantity_sold=prod['quantity'])
             # prods[seller.name]= product.name
             db.session.commit()
     return redirect(url_for('thanks'))
@@ -83,10 +90,24 @@ def customer_register():
     form = CustomerRegisterForm()
     if form.validate_on_submit():
         hash_password = bcrypt.generate_password_hash(form.password.data)
-        register = Register(name=form.name.data, username=form.username.data, email=form.email.data,password=hash_password,country=form.country.data, city=form.city.data,contact=form.contact.data, address=form.address.data, zipcode=form.zipcode.data)
-        db.session.add(register)
-        flash(f'Welcome {form.name.data} Thank you for registering', 'success')
-        db.session.commit()
+        input_request = AccountCreationRequest \
+            (buyer_id=random.randint(0, 10000),
+             buyer_name=form.name.data,
+             buyer_email=form.email.data,
+             buyer_username=form.username.data,
+             buyer_password=hash_password,
+             items_purchased = 0,
+             buyer_city=form.city.data,
+             buyer_contact=form.contact.data,
+             buyer_address=form.address.data,
+             buyer_country=form.country.data,
+             buyer_zipcode=form.zipcode.data,
+             )
+        # register = Register(name=form.name.data, username=form.username.data, email=form.email.data,password=hash_password,country=form.country.data, city=form.city.data,contact=form.contact.data, address=form.address.data, zipcode=form.zipcode.data)
+        response = grpc_client.createAccount(input_request)
+        # db.session.add(register)
+        flash(f'Welcome {form.name.data} Thank you for registering. Creation status:', response.status)
+        # db.session.commit()
         return redirect(url_for('customerLogin'))
     return render_template('customer/register.html', form=form)
 
@@ -96,16 +117,27 @@ def customerLogin():
     # print(time.time())
     resp_time= start_timer()
     form = CustomerLoginFrom()
-    if form.validate_on_submit():
-        user = Register.query.filter_by(email=form.email.data).first()
-        if user and bcrypt.check_password_hash(user.password, form.password.data):
-            login_user(user)
-            flash('You are login now!', 'success')
-            next = request.args.get('next')
-            stop_timer(resp_time, "buyer_login")
-            return redirect(next or url_for('home'))
-        flash('Incorrect email and password','danger')
-        return redirect(url_for('customerLogin'))
+    try:
+        if form.validate_on_submit():
+            input_request = AccountLoginRequest(buyer_username=form.email.data, buyer_password=form.password.data)
+            # user = Register.query.filter_by(email=form.email.data).first()
+            print("hello")
+            print(input_request)
+            user = grpc_client.login(input_request)
+            newUser = Register(id=user.buyer_id, name=user.buyer_name, username=user.buyer_username,
+                                email=user.buyer_email, password=user.buyer_password, country=user.buyer_country,
+                                city=user.buyer_city, contact=user.buyer_contact, address=user.buyer_address,
+                                zipcode=user.buyer_zipcode, itemspurchased=user.items_purchased)
+            if user.is_active == "true":
+                login_user(newUser)
+                flash('You are login now!', 'success')
+                return redirect(url_for('home'))
+            else:
+                flash('Incorrect email and password', 'danger')
+                return redirect(url_for('customerLogin'))
+    except Exception as e:
+        print(e)
+    stop_timer(resp_time, "buyer_login")
     return render_template('customer/login.html', form=form)
 
 

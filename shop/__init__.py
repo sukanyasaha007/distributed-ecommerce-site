@@ -12,7 +12,7 @@ from flask_migrate import Migrate
 
 basedir = os.path.abspath(os.path.dirname(__file__))
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///shop.db'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:@34.67.70.132/onlineshopping'
 app.config['SECRET_KEY']='djshakuo'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
@@ -28,7 +28,7 @@ search.init_app(app)
 
 migrate = Migrate(app, db)
 with app.app_context():
-    if db.engine.url.drivername == "sqlite":
+    if db.engine.url.drivername == "mysql":
         migrate.init_app(app, db, render_as_batch=True)
     else:
         migrate.init_app(app, db)
@@ -51,7 +51,7 @@ def start_timer():
 def stop_timer(start_time, funct):
     # output is in seconds
     resp_time = (time.time() - start_time)
-    with open(r'/Users/sukanyasaha/Desktop/Distributed Systems/Assignments/Assignment 2/Assignment2-Sukanya/test1/latency_report.csv', 'a', newline='') as f:
+    with open(r'../latency_report.csv', 'a', newline='') as f:
         csvwriter = csv.writer(f)
         csvwriter.writerow([funct, str(resp_time)])
     return
@@ -62,4 +62,3 @@ from shop.carts import carts
 from shop.customers import routes
 
 from flask import request
-
