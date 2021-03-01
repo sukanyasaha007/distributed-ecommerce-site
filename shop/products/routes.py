@@ -1,11 +1,12 @@
 from flask import render_template,session, request,redirect,url_for,flash,current_app
-from shop import app,db,photos
+from shop import app, db, photos, start_timer, stop_timer
 from .models import Category,Brand,Addproduct
 from .models import SoldProducts
 from .forms import Addproducts
 import secrets
 import os
 from flask_login import current_user
+import random
 import grpc
 from shop import grpc_client
 
@@ -27,8 +28,10 @@ def home():
 
 @app.route('/result')
 def result():
+    resp_time = start_timer()
     searchword = request.args.get('q')
     products = Addproduct.query.msearch(searchword, fields=['name','desc'] , limit=6)
+    stop_timer(resp_time, "searchProducts")
     return render_template('products/result.html',products=products,brands=brands(),categories=categories())
 
 @app.route('/product/<int:id>')
@@ -59,7 +62,8 @@ def get_category(id):
 def addbrand():
     if request.method =="POST":
         getbrand = request.form.get('brand')
-        brand = Brand(name=getbrand)
+        id=random.randint(0, 10000)
+        brand = Brand(id=id, name=getbrand)
         db.session.add(brand)
         flash(f'The brand {getbrand} was added to your database','success')
         db.session.commit()
@@ -97,7 +101,8 @@ def deletebrand(id):
 def addcat():
     if request.method =="POST":
         getcat = request.form.get('category')
-        category = Category(name=getcat)
+        id=random.randint(0, 10000)
+        category = Category(id= id, name=getcat)
         db.session.add(category)
         flash(f'The brand {getcat} was added to your database','success')
         db.session.commit()
@@ -150,10 +155,11 @@ def addproduct():
         description = form.description.data
         brand = request.form.get('brand')
         category = request.form.get('category')
+        id =  random.randint(0, 10000)
         image_1 = photos.save(request.files.get('image_1'), name=secrets.token_hex(10) + ".")
         image_2 = photos.save(request.files.get('image_2'), name=secrets.token_hex(10) + ".")
         image_3 = photos.save(request.files.get('image_3'), name=secrets.token_hex(10) + ".")
-        addproduct = Addproduct(name=name,price=price,discount=discount,stock=stock,colors=colors,desc=description,category_id=category,brand_id=brand,image_1=image_1,image_2=image_2,image_3=image_3)
+        addproduct = Addproduct(id=id, name=name,price=price,discount=discount,stock=stock,colors=colors,desc=description,category_id=category,brand_id=brand,image_1=image_1,image_2=image_2,image_3=image_3)
         db.session.add(addproduct)
         db.session.commit()
         if current_user.is_authenticated:

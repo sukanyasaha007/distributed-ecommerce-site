@@ -70,4 +70,3 @@ Werkzeug==0.15.6
 wrapt==1.11.2
 WTForms==2.2.1
 zeep==4.0.0
-Flask-SocketIO==5.0.1

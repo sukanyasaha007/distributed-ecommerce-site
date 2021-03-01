@@ -59,7 +59,7 @@ def payment():
 
 def makeTransaction(order):
     transport = zeep.Transport(cache=None)
-    client = zeep.Client("https://soap-server-vlhiisghja-uc.a.run.app:8080/?wsdl", transport=transport)
+    client = zeep.Client("https://soap-server-vlhiisghja-uc.a.run.app?WSDL", transport=transport)
     st = time.time()
     result = client.service.slow_request()  # takes 1 sec
     print("Time: %.2f" % (time.time() - st))
@@ -160,9 +160,10 @@ def get_order():
     if current_user.is_authenticated:
         customer_id = current_user.id
         invoice = secrets.token_hex(5)
+        id = random.randint(0, 100000)
         updateshoppingcart
         try:
-            order = CustomerOrder(id=customer_id, invoice=invoice,customer_id=customer_id,orders=session['Shoppingcart'])
+            order = CustomerOrder(id=id, invoice=invoice,customer_id=customer_id,orders=session['Shoppingcart'])
             db.session.add(order)
             db.session.commit()
             session.pop('Shoppingcart')

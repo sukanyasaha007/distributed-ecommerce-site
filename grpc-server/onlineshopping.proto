@@ -1,0 +1,81 @@
+syntax = "proto3";
+
+message AccountCreationRequest {
+     int32 buyer_id = 1;
+     string buyer_name = 2;
+     string buyer_email = 3;
+     string buyer_username = 4;
+     string buyer_password = 5;
+     int32 items_purchased = 6;
+     string buyer_country=7;
+     string buyer_city=8;
+     string buyer_contact=9;
+     string buyer_address=10;
+     string buyer_zipcode=11;
+     string is_active=12;
+}
+
+message AccountLoginRequest {
+     string buyer_username = 3;
+     string buyer_password = 4;
+}
+
+message AccountCreationResponse {
+     string status = 1;
+}
+
+message Accounts {
+     repeated AccountCreationRequest accounts = 1;
+}
+
+message GetAccount {
+     string acc = 1;
+}
+
+message SearchProductRequest {
+     string product = 1;
+}
+
+message SearchProductResponse {
+     repeated ProductDetails products = 1;
+}
+
+
+message GetProduct {}
+
+message ProductDetails {
+    int32 id = 1;
+    string name = 2;
+    string price = 3;
+    int32 discount = 4;
+    int32 stock = 5;
+    string colors = 6;
+    string desc = 7;
+    string pub_date = 8;
+    int32 category_id = 9;
+    string category = 10;
+    int32 brand_id = 11;
+    string brand = 12;
+    string image_1 = 13;
+    string image_2 = 14;
+    string image_3 = 15;
+    string condition = 16;
+}
+
+message AddToCartRequest {
+     string customerId = 1;
+     SearchProductResponse products = 2;
+}
+
+message AddToCartResponse {
+     string status = 1;
+     string price = 2;
+}
+
+service BuyerActions {
+    rpc createAccount (AccountCreationRequest) returns (AccountCreationResponse);
+    rpc login (AccountLoginRequest) returns (AccountCreationRequest);
+    rpc search (SearchProductRequest) returns (SearchProductResponse);
+    rpc getProducts (GetProduct) returns (SearchProductResponse);
+    rpc addToCart (AddToCartRequest) returns (AddToCartResponse);
+}
