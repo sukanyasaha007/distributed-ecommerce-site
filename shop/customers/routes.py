@@ -1,6 +1,6 @@
-from flask import render_template,session, request,redirect,url_for,flash,current_app,make_response
+from flask import render_template,session, redirect,url_for,flash, make_response
 from flask_login import login_required, current_user, logout_user, login_user
-from shop import app,db,photos, search,bcrypt,login_manager
+from shop import app,db, bcrypt
 from .forms import CustomerRegisterForm, CustomerLoginFrom
 # from .forms import  RatingForm
 from .model import Register,CustomerOrder
@@ -10,23 +10,17 @@ from flask_login import current_user as buyer
 from shop import start_timer, stop_timer
 import random
 import secrets
-import os
-import json
 import pdfkit
 import stripe
 import zeep
 import time
 import grpc
 # from json import jsonify
-import traceback
-from shop.grpc_ecommerce.protobufs.onlineshopping_pb2 import AccountCreationRequest, AccountLoginRequest, SearchProductRequest, GetProduct
-from shop.grpc_ecommerce.protobufs.onlineshopping_pb2_grpc import BuyerActionsStub
+from shop.grpc_server.onlineshopping_pb2 import AccountCreationRequest, AccountLoginRequest
+from shop.grpc_server.onlineshopping_pb2_grpc import BuyerActionsStub
 
-from flask import request, jsonify
-
-#GRPC params
-channel = grpc.insecure_channel("localhost:50051")
-grpc_client = BuyerActionsStub(channel)
+from flask import request
+from shop import grpc_client
 
 buplishable_key ='pk_test_51IN5nDCVZ5Yf06wRG9BLSKuBUaUqXKWKxbQPjAtHcsYdZgY0NiTG0aXIf25Ll29ItyhvnxjBa1FSUJPCo107MmCD00nkqBkcID'
 stripe.api_key ='sk_test_51IN5nDCVZ5Yf06wROWN3sRW7aVEhhCfo3obH4jNrU1MuzrOVeLS03hIwbs3UHOcL0v356Z01J1eP8rpcOZT6tQjF00HLVt218C'
@@ -65,7 +59,7 @@ def payment():
 
 def makeTransaction(order):
     transport = zeep.Transport(cache=None)
-    client = zeep.Client("http://localhost:8000/?wsdl", transport=transport)
+    client = zeep.Client("https://soap-server-vlhiisghja-uc.a.run.app?WSDL", transport=transport)
     st = time.time()
     result = client.service.slow_request()  # takes 1 sec
     print("Time: %.2f" % (time.time() - st))
@@ -89,13 +83,13 @@ def thanks():
 def customer_register():
     form = CustomerRegisterForm()
     if form.validate_on_submit():
-        hash_password = bcrypt.generate_password_hash(form.password.data)
+        resp_time = start_timer()
         input_request = AccountCreationRequest \
             (buyer_id=random.randint(0, 10000),
              buyer_name=form.name.data,
              buyer_email=form.email.data,
              buyer_username=form.username.data,
-             buyer_password=hash_password,
+             buyer_password=form.password.data,
              items_purchased = 0,
              buyer_city=form.city.data,
              buyer_contact=form.contact.data,
@@ -106,9 +100,15 @@ def customer_register():
         # register = Register(name=form.name.data, username=form.username.data, email=form.email.data,password=hash_password,country=form.country.data, city=form.city.data,contact=form.contact.data, address=form.address.data, zipcode=form.zipcode.data)
         response = grpc_client.createAccount(input_request)
         # db.session.add(register)
-        flash(f'Welcome {form.name.data} Thank you for registering. Creation status:', response.status)
+        stop_timer(resp_time, "buyerCreateAccount")
+        if(response.status == "success"):
+            flash(f'Welcome {form.name.data} Thank you for registering! Login now', 'success')
+            return redirect(url_for('customerLogin'))
+
         # db.session.commit()
-        return redirect(url_for('customerLogin'))
+        else:
+            flash(f'Error in registering for {form.name.data}. Try again', 'danger')
+            return redirect(url_for('customerRegister'))
     return render_template('customer/register.html', form=form)
 
 
@@ -119,6 +119,7 @@ def customerLogin():
     form = CustomerLoginFrom()
     try:
         if form.validate_on_submit():
+            resp_time = start_timer()
             input_request = AccountLoginRequest(buyer_username=form.email.data, buyer_password=form.password.data)
             # user = Register.query.filter_by(email=form.email.data).first()
             print("hello")
@@ -128,6 +129,7 @@ def customerLogin():
                                 email=user.buyer_email, password=user.buyer_password, country=user.buyer_country,
                                 city=user.buyer_city, contact=user.buyer_contact, address=user.buyer_address,
                                 zipcode=user.buyer_zipcode, itemspurchased=user.items_purchased)
+            stop_timer(resp_time, "buyer_login")
             if user.is_active == "true":
                 login_user(newUser)
                 flash('You are login now!', 'success')
@@ -137,7 +139,6 @@ def customerLogin():
                 return redirect(url_for('customerLogin'))
     except Exception as e:
         print(e)
-    stop_timer(resp_time, "buyer_login")
     return render_template('customer/login.html', form=form)
 
 
@@ -159,9 +160,10 @@ def get_order():
     if current_user.is_authenticated:
         customer_id = current_user.id
         invoice = secrets.token_hex(5)
+        id = random.randint(0, 100000)
         updateshoppingcart
         try:
-            order = CustomerOrder(invoice=invoice,customer_id=customer_id,orders=session['Shoppingcart'])
+            order = CustomerOrder(id=id, invoice=invoice,customer_id=customer_id,orders=session['Shoppingcart'])
             db.session.add(order)
             db.session.commit()
             session.pop('Shoppingcart')

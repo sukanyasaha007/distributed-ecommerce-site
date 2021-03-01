@@ -55,7 +55,7 @@ class SoldProducts(db.Model):
     email= db.Column(db.String(500),unique=False, nullable=False)
     product = db.Column(db.String(500),unique=False, nullable=False)
     quantity_sold= db.Column(db.Integer, nullable=False)
-    # stock= db.Column(db.Integer, nullable=False)
+    stock= db.Column(db.Integer, nullable=False)
 
     def get_sold(self, sellername, prod):
         self.sellername= sellername
@@ -69,7 +69,7 @@ class SoldProducts(db.Model):
         else:
             if self.product== prod:
                 self.quantity_sold+= quantity_sold
-                # self.stock-= self.stock
+                self.stock-= self.stock
                 return quantity_sold
 
     def __repr__(self):
@@ -78,6 +78,20 @@ class SoldProducts(db.Model):
     # def __repr__(self):
     #     return 'product {} sold {}'.format(self.product, self.quantity_sold)
 
+class cart(db.Model):
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    product_id = db.Column(db.Integer, nullable=False)
+    customer_id = db.Column(db.Integer, nullable=False)
+    name = db.Column(db.String(80), nullable=False)
+    price = db.Column(db.Numeric(10,2), nullable=False)
+    discount = db.Column(db.Integer, default=0)
+    stock = db.Column(db.Integer, nullable=False)
+    colors = db.Column(db.Text, nullable=False)
+    descp = db.Column(db.Text, nullable=False)
+    pub_date = db.Column(db.DateTime, nullable=False,default=datetime.utcnow)
+    image_1 = db.Column(db.String(150), nullable=False, default='image1.jpg')
+    image_2 = db.Column(db.String(150), nullable=False, default='image2.jpg')
+    image_3 = db.Column(db.String(150), nullable=False, default='image3.jpg')
 
 db.create_all()
 
