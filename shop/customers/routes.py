@@ -1,9 +1,9 @@
 from flask import render_template,session, redirect,url_for,flash, make_response
 from flask_login import login_required, current_user, logout_user, login_user
 from shop import app,db, bcrypt
-from .forms import CustomerRegisterForm, CustomerLoginFrom
+from .forms import CustomerRegisterForm, CustomerLoginFrom, RatingForm
 # from .forms import  RatingForm
-from .model import Register,CustomerOrder
+from .model import Register, CustomerOrder, Rating
 from shop.products.models import Addproduct, SoldProducts
 from flask_login import current_user as buyer
 # from .model import Rating
@@ -43,15 +43,14 @@ def payment():
     orders =  CustomerOrder.query.filter_by(customer_id = current_user.id,invoice=invoice).order_by(CustomerOrder.id.desc()).first()
     orders.status = 'Paid'
     db.session.commit()
-    result= makeTransaction(order=invoice)
-    prods={}
+    result = makeTransaction(order=invoice)
     if result:
         for key, prod in orders.orders.items():
             product = Addproduct.query.get_or_404(key)
-            product.stock = product.stock-prod['quantity']
+            product.stock = product.stock - prod['quantity']
             db.session.commit()
-            soldproducts= SoldProducts.query.filter_by(name=buyer.name).first()
-            sold= soldproducts.update_stock(sellername=buyer.name, prod=product.name, quantity_sold=prod['quantity'])
+            soldproducts= SoldProducts.query.filter_by(product=product.name).first()
+            soldproducts.update_stock(sellername=soldproducts.name, prod=product.name, quantity_sold=prod['quantity'])
             # prods[seller.name]= product.name
             db.session.commit()
     return redirect(url_for('thanks'))
@@ -69,15 +68,17 @@ def makeTransaction(order):
 def thanks():
     return render_template('customer/thank.html')
 
-# @app.route('/rating', methods=['GET','POST'])
-# def rating():
-#     form= RatingForm()
-#     if form.validate_on_submit():
-#         rating= Rating(product=form.product.data, rating=form.rating.data)            
-#         db.session.add(rating)
-#         flash(f'Thank you for submitting your rating', 'success')
-#         db.session.commit()
-#     return render_template('customer/index.html')
+@app.route('/rating/<seller>/<product>', methods=['GET','POST'])
+def rating(seller, product):
+    form= RatingForm()
+    if form.validate_on_submit():
+        id = random.randint(0, 10000)
+        rating= Rating(id=id, product=product, rating=form.rating.data, sellername=seller)
+        db.session.add(rating)
+        flash(f'Thank you for submitting your rating', 'success')
+        db.session.commit()
+        return redirect(url_for('displayOrders'))
+    return render_template('customer/rating.html', form=form, product=product, seller=seller)
 
 @app.route('/customer/register', methods=['GET','POST'])
 def customer_register():
@@ -114,7 +115,6 @@ def customer_register():
 
 @app.route('/customer/login', methods=['GET','POST'])
 def customerLogin():
-    # print(time.time())
     resp_time= start_timer()
     form = CustomerLoginFrom()
     try:
@@ -122,8 +122,6 @@ def customerLogin():
             resp_time = start_timer()
             input_request = AccountLoginRequest(buyer_username=form.email.data, buyer_password=form.password.data)
             # user = Register.query.filter_by(email=form.email.data).first()
-            print("hello")
-            print(input_request)
             user = grpc_client.login(input_request)
             newUser = Register(id=user.buyer_id, name=user.buyer_name, username=user.buyer_username,
                                 email=user.buyer_email, password=user.buyer_password, country=user.buyer_country,
@@ -196,7 +194,28 @@ def orders(invoice):
         return redirect(url_for('customerLogin'))
     return render_template('customer/order.html', invoice=invoice, tax=tax,subTotal=subTotal,grandTotal=grandTotal,customer=customer,orders=orders)
 
+@app.route('/displayorders')
+@login_required
+def displayOrders():
+    if current_user.is_authenticated:
+        sellers = []
+        grandTotal = 0
+        subTotal = 0
+        customer_id = current_user.id
+        customer = Register.query.filter_by(id=customer_id).first()
+        orders = CustomerOrder.query.filter_by(customer_id=customer_id).order_by(CustomerOrder.id.desc()).first()
+        for _key, product in orders.orders.items():
+            soldproducts= SoldProducts.query.filter_by(product=product['name']).first()
+            sellers.append(soldproducts.name)
+            discount = (product['discount']/100) * float(product['price'])
+            subTotal += float(product['price']) * int(product['quantity'])
+            subTotal -= discount
+            tax = ("%.2f" % (.06 * float(subTotal)))
+            grandTotal = ("%.2f" % (1.06 * float(subTotal)))
 
+    else:
+        return redirect(url_for('customerLogin'))
+    return render_template('customer/displayOrders.html', tax=tax,subTotal=subTotal,grandTotal=grandTotal,customer=customer,orders=orders, sellers=sellers)
 
 
 @app.route('/get_pdf/<invoice>', methods=['POST'])

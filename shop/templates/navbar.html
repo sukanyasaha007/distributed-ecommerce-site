@@ -38,13 +38,16 @@
              <li class="nav-item">
                <a href="{{url_for('customer_logout')}}" class="nav-link"> Logout</a>
              </li>
+              </li>
+              <li class="nav-item">
+              <a href="{{url_for('displayOrders')}}" class="nav-link">Orders</a>
+            </li>
              {% else %}
              <li class="nav-item">
               <a href="{{url_for('customer_register')}}" class="nav-link">Register</a>
             </li>
              <li class="nav-item">
               <a href="{{url_for('customerLogin')}}" class="nav-link">login</a>
-            </li>
             {% endif %}
               <li class="nav-item">
                 <a href="{{url_for('getCart')}}" class="nav-link"> Cart ({{ session['Shoppingcart']|length }}) </a>

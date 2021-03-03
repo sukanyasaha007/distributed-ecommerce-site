@@ -69,7 +69,7 @@ class SoldProducts(db.Model):
         else:
             if self.product== prod:
                 self.quantity_sold+= quantity_sold
-                self.stock-= self.stock
+                self.stock -= quantity_sold
                 return quantity_sold
 
     def __repr__(self):

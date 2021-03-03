@@ -156,15 +156,16 @@ def addproduct():
         brand = request.form.get('brand')
         category = request.form.get('category')
         id =  random.randint(0, 10000)
+        seller_id = random.randint(0, 10000)
         image_1 = photos.save(request.files.get('image_1'), name=secrets.token_hex(10) + ".")
         image_2 = photos.save(request.files.get('image_2'), name=secrets.token_hex(10) + ".")
         image_3 = photos.save(request.files.get('image_3'), name=secrets.token_hex(10) + ".")
-        addproduct = Addproduct(id=id, name=name,price=price,discount=discount,stock=stock,colors=colors,desc=description,category_id=category,brand_id=brand,image_1=image_1,image_2=image_2,image_3=image_3)
+        addproduct = Addproduct(id=id,  name=name, price=price, discount=discount, stock=stock, colors=colors, desc=description, category_id=category,brand_id=brand,image_1=image_1,image_2=image_2,image_3=image_3)
         db.session.add(addproduct)
         db.session.commit()
         if current_user.is_authenticated:
             sellername= current_user.name
-            soldproducts = SoldProducts(name=sellername, email=current_user.email, product=name, quantity_sold=0)
+            soldproducts = SoldProducts(id=id, name=sellername, email=current_user.email, product=name, quantity_sold=0, stock=stock)
             print(soldproducts)
             db.session.add(soldproducts)
             db.session.commit()
