@@ -67,11 +67,11 @@ def start_timer():
     start_time = time.time()
     return start_time
 
-
+# "/Users/sukanyasaha/Desktop/Distributed Systems/Assignments/Assignment 2/Namratha/V3/distributed-system-assignment2/run.py"
 def stop_timer(start_time, funct):
     # output is in seconds
     resp_time = (time.time() - start_time)
-    with open(r'../latency_report.csv', 'a', newline='') as f:
+    with open(os.environ.get("LATENCY_REPORT_PATH"), 'a', newline='') as f:
         csvwriter = csv.writer(f)
         csvwriter.writerow([funct, str(resp_time)])
     return
