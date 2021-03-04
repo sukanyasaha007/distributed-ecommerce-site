@@ -8,7 +8,8 @@ import onlineshopping_pb2_grpc
 from BuyerActionService import BuyerActionService
 import os
 
-_PORT = os.environ["PORT"]
+# _PORT = os.environ["PORT"]
+_PORT = 50051
 
 def serve():
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))

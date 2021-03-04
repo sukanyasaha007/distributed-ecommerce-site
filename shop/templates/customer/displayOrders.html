@@ -5,10 +5,6 @@
     {% include '_messages.html' %}
     <div class="row">
         <div class="col-md-12">
-            Invoice: {{orders.invoice}}
-            <br>
-            Status: {{orders.status}}
-            <br>
             Customer name: {{customer.name}}
             <br>
             Customer email: {{customer.email}}
@@ -29,7 +25,8 @@
 
             </thead>
             <tbody>
-                {% for key, product in orders.orders.items() %}
+                {% for k in orders %}
+                {% for key, product in k.orders.items() %}
                 {% set discount =(product.discount/100) * product.price|float %}
                 <tr>
                     <td>{{loop.index}}</td>
@@ -51,6 +48,7 @@
                         <td><a href="{{url_for('rating', seller=sellername, product=product.name)}}" method="post">Please Click to rate!</a></td>
                 </a>
                 </tr>
+                {% endfor %}
                 {% endfor %}
             </tbody>
         </table>

@@ -1,7 +1,9 @@
+import random
+
 from flask import render_template,session, request,redirect,url_for,flash
-from shop import app,db,bcrypt
-from .forms import RegistrationForm,LoginForm
-from .models import User
+from shop import app, db, bcrypt, grpc_client
+from .forms import LoginForm
+# from .models import User
 from .models import SellerProducts
 from shop.products.models import SoldProducts
 from shop import start_timer, stop_timer
@@ -10,7 +12,12 @@ from shop import start_timer, stop_timer
 from shop.products.models import Addproduct,Category,Brand
 import zeep
 import time
-from flask_login import current_user, logout_user, login_user
+from flask_login import current_user, logout_user, login_user, login_required
+
+from ..customers.forms import CustomerRegisterForm, CustomerLoginFrom
+from ..customers.model import Register
+from ..grpc_server.onlineshopping_pb2 import AccountCreationRequest, AccountLoginRequest
+
 
 @app.route('/admin')
 def admin():
@@ -36,43 +43,59 @@ def categories():
 
 @app.route('/admin/register', methods=['GET', 'POST'])
 def admin_register():
-    resp_time= start_timer()
-    form = RegistrationForm()
+    form = CustomerRegisterForm()
     if form.validate_on_submit():
-        hash_password = bcrypt.generate_password_hash(form.password.data)
-        user = User(name=form.name.data,username=form.username.data, email=form.email.data,
-                    password=hash_password)
-        db.session.add(user)
+        resp_time = start_timer()
+        input_request = AccountCreationRequest \
+            (buyer_id=random.randint(0, 10000),
+             buyer_name=form.name.data,
+             buyer_email=form.email.data,
+             buyer_username=form.username.data,
+             buyer_password=form.password.data,
+             items_purchased=0,
+             buyer_city=form.city.data,
+             buyer_contact=form.contact.data,
+             buyer_address=form.address.data,
+             buyer_country=form.country.data,
+             buyer_zipcode=form.zipcode.data,
+             )
+        response = grpc_client.createAccount(input_request)
+        stop_timer(resp_time, "sellerCreateAccount")
+        if (response.status == "success"):
+            flash(f'Welcome {form.name.data} Thank you for registering! Login now', 'success')
+            return redirect(url_for('admin_login'))
+        else:
+            flash(f'Error in registering for {form.name.data}. Try again', 'danger')
+            return redirect(url_for('adminRegister'))
 
-        sellerproducts = SellerProducts(name=form.name.data,email=form.email.data, products= form.products.data)
-        db.session.add(sellerproducts)
-        # print('sellerproducts', sellerproducts)
-        # print('db', SellerProducts.query.filter_by(name= form.name.data).all())
-        flash(f'welcome {form.name.data} Thanks for registering','success')
-        db.session.commit()
-        stop_timer(resp_time, "seller_register")
-        return redirect(url_for('admin_login'))
-    return render_template('admin/register.html',title='Register user', form=form)
+    return render_template('customer/register.html', form=form)
 
 
 @app.route('/admin/login', methods=['GET','POST'])
 def admin_login():
     resp_time= start_timer()
-    form = LoginForm()
-    if form.validate_on_submit():
-        user = User.query.filter_by(email=form.email.data).first()
-        if user and bcrypt.check_password_hash(user.password, form.password.data):
-            # session["user"]= user
-            session['email'] = form.email.data
-            next = request.args.get('next')
-            flash(f'welcome {form.email.data} you are logged in now','success')
-            stop_timer(resp_time, "seller_login")
-            return redirect(next or url_for('admin'))
-        else:
-            flash(f'Wrong email and password', 'success')
-            return redirect(url_for('admin_login'))
+    form = CustomerLoginFrom()
+    try:
+        if form.validate_on_submit():
+            resp_time = start_timer()
+            input_request = AccountLoginRequest(buyer_username=form.email.data, buyer_password=form.password.data)
+            # user = Register.query.filter_by(email=form.email.data).first()
+            user = grpc_client.login(input_request)
+            newUser = Register(id=user.buyer_id, name=user.buyer_name, username=user.buyer_username,
+                                email=user.buyer_email, password=user.buyer_password, country=user.buyer_country,
+                                city=user.buyer_city, contact=user.buyer_contact, address=user.buyer_address,
+                                zipcode=user.buyer_zipcode, itemspurchased=user.items_purchased)
+            stop_timer(resp_time, "admin_login")
+            if user.is_active == "true":
+                login_user(newUser)
+                flash('You are login now!', 'success')
+                return redirect(url_for('admin'))
+            else:
+                flash('Incorrect email and password', 'danger')
+                return redirect(url_for('admin_login'))
+    except Exception as e:
+        print(e)
     return render_template('admin/login.html',title='Login page',form=form)
-
 
 @app.route('/seller/productslist', methods=['GET','POST'])
 def seller_products():
@@ -88,8 +111,10 @@ def seller_products():
         
 
 @app.route('/seller/soldproducts', methods=['GET','POST'])
+@login_required
 def sold_products():
     resp_time= start_timer()
+    print(current_user)
     if current_user.is_authenticated:
         name= current_user.name
         soldproducts= SoldProducts.query.filter_by(name= name).all()

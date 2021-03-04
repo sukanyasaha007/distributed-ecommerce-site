@@ -5,6 +5,7 @@ from sqlalchemy.orm import sessionmaker, relationship
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 engine = create_engine('mysql+pymysql://root:@34.67.70.132/onlineshopping')
+# engine = create_engine('mysql+pymysql://root:my-secret-pw@host.docker.internal:3306/onlineshopping')
 Base = declarative_base()
 DBSession = sessionmaker(bind=engine)
 

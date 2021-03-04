@@ -68,6 +68,7 @@ class BuyerActionService(onlineshopping_pb2_grpc.BuyerActionsServicer):
 
     def search(self, request, context):
         json_docs = []
+        print(request)
         product = session.query(Addproduct).filter(Addproduct.id == request.product).first()
         print(product)
         json_docs.append(ProductDetails(

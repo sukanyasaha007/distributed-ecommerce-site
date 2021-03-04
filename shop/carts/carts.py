@@ -21,6 +21,7 @@ def AddCart():
         product_id = request.form.get('product_id')
         quantity = int(request.form.get('quantity'))
         color = request.form.get('colors')
+        print(product_id)
         item = SearchProductRequest(product=product_id)
         response = grpc_client.search(item)
         product = response.products

@@ -58,11 +58,11 @@ def payment():
 
 def makeTransaction(order):
     transport = zeep.Transport(cache=None)
-    client = zeep.Client("https://soap-server-vlhiisghja-uc.a.run.app?WSDL", transport=transport)
+    # client = zeep.Client("host.docker.internal:8000/?WSDL", transport=transport)
     st = time.time()
-    result = client.service.slow_request()  # takes 1 sec
+    # result = client.service.slow_request()  # takes 1 sec
     print("Time: %.2f" % (time.time() - st))
-    return result
+    return True
 
 @app.route('/thanks')
 def thanks():
@@ -202,20 +202,25 @@ def displayOrders():
         grandTotal = 0
         subTotal = 0
         customer_id = current_user.id
-        customer = Register.query.filter_by(id=customer_id).first()
-        orders = CustomerOrder.query.filter_by(customer_id=customer_id).order_by(CustomerOrder.id.desc()).first()
-        for _key, product in orders.orders.items():
-            soldproducts= SoldProducts.query.filter_by(product=product['name']).first()
-            sellers.append(soldproducts.name)
-            discount = (product['discount']/100) * float(product['price'])
-            subTotal += float(product['price']) * int(product['quantity'])
-            subTotal -= discount
-            tax = ("%.2f" % (.06 * float(subTotal)))
-            grandTotal = ("%.2f" % (1.06 * float(subTotal)))
+        customer = Register.query.filter_by(id = customer_id).first()
+        orders = CustomerOrder.query.filter_by(customer_id = customer_id)
+        finalOrders = []
+        for k in orders:
+            for _key, product in k.orders.items():
+                soldproducts = SoldProducts.query.filter_by(product = product['name']).first()
+                print(product['name'])
+                if soldproducts != None:
+                    finalOrders.append(k)
+                    sellers.append(soldproducts.name)
+                    discount = (product['discount']/100) * float(product['price'])
+                    subTotal += float(product['price']) * int(product['quantity'])
+                    subTotal -= discount
+                    tax = ("%.2f" % (.06 * float(subTotal)))
+                    grandTotal = ("%.2f" % (1.06 * float(subTotal)))
 
     else:
         return redirect(url_for('customerLogin'))
-    return render_template('customer/displayOrders.html', tax=tax,subTotal=subTotal,grandTotal=grandTotal,customer=customer,orders=orders, sellers=sellers)
+    return render_template('customer/displayOrders.html', tax=tax,subTotal=subTotal,grandTotal=grandTotal,customer=customer,orders=finalOrders, sellers=sellers)
 
 
 @app.route('/get_pdf/<invoice>', methods=['POST'])
