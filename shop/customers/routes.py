@@ -205,22 +205,26 @@ def displayOrders():
         customer = Register.query.filter_by(id = customer_id).first()
         orders = CustomerOrder.query.filter_by(customer_id = customer_id)
         finalOrders = []
-        for k in orders:
-            for _key, product in k.orders.items():
-                soldproducts = SoldProducts.query.filter_by(product = product['name']).first()
-                print(product['name'])
-                if soldproducts != None:
-                    finalOrders.append(k)
-                    sellers.append(soldproducts.name)
-                    discount = (product['discount']/100) * float(product['price'])
-                    subTotal += float(product['price']) * int(product['quantity'])
-                    subTotal -= discount
-                    tax = ("%.2f" % (.06 * float(subTotal)))
-                    grandTotal = ("%.2f" % (1.06 * float(subTotal)))
+        if(orders.count() > 0):
+            for k in orders:
+                for _key, product in k.orders.items():
+                    soldproducts = SoldProducts.query.filter_by(product = product['name']).first()
+                    print(product['name'])
+                    if soldproducts != None:
+                        finalOrders.append(k)
+                        sellers.append(soldproducts.name)
+                        discount = (product['discount']/100) * float(product['price'])
+                        subTotal += float(product['price']) * int(product['quantity'])
+                        subTotal -= discount
+                        tax = ("%.2f" % (.06 * float(subTotal)))
+                        grandTotal = ("%.2f" % (1.06 * float(subTotal)))
+        else:
+            flash("You have no orders", 'success')
+            return redirect(url_for('home'))
 
     else:
         return redirect(url_for('customerLogin'))
-    return render_template('customer/displayOrders.html', tax=tax,subTotal=subTotal,grandTotal=grandTotal,customer=customer,orders=finalOrders, sellers=sellers)
+    return render_template('customer/displayOrders.html', tax=tax,subTotal=subTotal,grandTotal=grandTotal,customer=customer,orders=finalOrders, sellers=sellers, noorders = len(finalOrders))
 
 
 @app.route('/get_pdf/<invoice>', methods=['POST'])
