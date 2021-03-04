@@ -5,13 +5,15 @@ from onlineshopping_pb2 import (
 )
 from models import Register, Base, DBSession, engine, Addproduct, cart
 
+# Base.metadata.create_all('mysql+pymysql://root:@localhost/onlineshopping')
 Base.metadata.create_all(engine)
+
 session = DBSession()
 
 class BuyerActionService(onlineshopping_pb2_grpc.BuyerActionsServicer):
     def createAccount(self, request, context):
         try:
-            print("hi")
+            print("BuyerActionService.createAccount")
             print(request)
             record = Register(id=request.buyer_id,
                               name=request.buyer_name,
@@ -22,6 +24,7 @@ class BuyerActionService(onlineshopping_pb2_grpc.BuyerActionsServicer):
                               profile='profile.jpg',date_created=datetime.now(),
                               itemspurchased=request.items_purchased)
             session.add(record)
+            print("DB commited inside")
             session.commit()
         except Exception as e:
             print("Exception")

@@ -4,14 +4,18 @@ from datetime import datetime
 from sqlalchemy.orm import sessionmaker, relationship
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
-engine = create_engine('mysql+pymysql://root:@34.67.70.132/onlineshopping')
+import os
+# engine = create_engine('mysql+pymysql://remoteApplication:abc%40123@35.188.152.5/onlineshopping')
+
+app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get("MYSQL_CONNECTION_STRING")
+
 # engine = create_engine('mysql+pymysql://root:my-secret-pw@host.docker.internal:3306/onlineshopping')
 Base = declarative_base()
 DBSession = sessionmaker(bind=engine)
 
 class Register(Base):
     __tablename__ = 'register'
-
+    print("I am in Register class")
     id = Column(Integer, primary_key=True)
     name = Column(String(50), unique=False)
     username = Column(String(50), unique=True)

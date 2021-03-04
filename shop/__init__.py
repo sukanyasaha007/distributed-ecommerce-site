@@ -17,7 +17,11 @@ from shop.grpc_server.onlineshopping_pb2_grpc import BuyerActionsStub
 
 basedir = os.path.abspath(os.path.dirname(__file__))
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:@34.67.70.132/onlineshopping'
+# app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:@localhost/onlineshopping'
+app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get("MYSQL_CONNECTION_STRING")
+
+
+
 # app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:my-secret-pw@host.docker.internal:3306/onlineshopping'
 app.config['SECRET_KEY']='djshakuo'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
@@ -49,7 +53,9 @@ login_manager.login_message = u"Please login first"
 
 #GRPC params
 # channel = grpc.secure_channel("grpc-server-vlhiisghja-uc.a.run.app:443", grpc.ssl_channel_credentials())
-channel = grpc.insecure_channel("host.docker.internal:50051")
+# channel = grpc.insecure_channel("host.docker.internal:50051")
+channel = grpc.insecure_channel("[::]:50051")
+
 grpc_client = BuyerActionsStub(channel)
 socketio = SocketIO(app)
 

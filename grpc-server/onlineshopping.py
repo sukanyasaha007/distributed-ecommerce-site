@@ -13,10 +13,13 @@ _PORT = 50051
 
 def serve():
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
+    print("I m in serve")
     onlineshopping_pb2_grpc.add_BuyerActionsServicer_to_server(
         BuyerActionService(), server
     )
     server.add_insecure_port(f"[::]:{_PORT}")
+    # server.add_insecure_port("[::]:50051")
+
     server.start()
     server.wait_for_termination()
 
