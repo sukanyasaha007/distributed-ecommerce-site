@@ -5,6 +5,7 @@
     3. Front end for Buyer
     4. Front end For Seller
     5. DataBase
+    ![]"assignment 2 architechture.png"
 ## Framework
     1. Buyer side- Rest using Flask
     2. Seller Side- REST using Flask
@@ -43,6 +44,7 @@
     4. clone https://github.com/sukanyasaha007/distributed-system-assignment2 --branch sukanya/gcp-setup
     5. Set up database in another instance and create database using database.sql schema
     6. Open first instance set up the env file and follow steps mentioned in Run loaclly part above
+    7. check latency report
 # Refernce
     1. Flask, GRPC documents
     2. UI Design and integration is learned from tutorial of Jamal Bugti
