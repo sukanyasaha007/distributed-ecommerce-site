@@ -10,6 +10,27 @@
     2. Seller Side- REST using Flask
     3. GRPC to interact with database
     4. SOAp server for financial transaction
+
+## Features
+    1. Seller Side-
+        1. Register
+        2. Login
+        3. Logout
+        4. Add Product
+        5. Update Product
+        6. Delete Product
+        7. Diplay current products and rating
+    2. Buyer Side-
+        1. Register
+        2. Login
+        3. Logout
+        4. Search
+        5. Add to Cart
+        6. Remove/Update cart
+        7. Display Cart
+        8. Make Payment
+        9. Provide Feedback
+        10. Order History
 ## Run Locally
     1. Start the flask server - run the run.py file
     2. Start the GRPC Server- grpc_server/onlineshopping.py run this
