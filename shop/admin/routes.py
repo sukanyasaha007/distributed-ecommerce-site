@@ -141,7 +141,7 @@ def sold_products():
                 sold_quant[s.product]= s.quantity_sold
                 stock_prod= Addproduct.query.filter_by(name=s.product).first()
                 if stock_prod== None:
-                    flash("You have sold products, sorry!", 'danger')
+                    #flash("You have sold products, sorry!", 'danger')
                     redirect(url_for('admin'))
                 else:
                     current_stock[s.product]=stock_prod.stock
