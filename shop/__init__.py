@@ -53,7 +53,7 @@ login_manager.init_app(app)
 login_manager.login_view='customerLogin'
 login_manager.needs_refresh_message_category='danger'
 login_manager.login_message = u"Please login first"
-
+soap_host = ""
 #GRPC params
 # channel = grpc.secure_channel("grpc-server-vlhiisghja-uc.a.run.app:443", grpc.ssl_channel_credentials())
 # channel = grpc.insecure_channel("host.docker.internal:50051")

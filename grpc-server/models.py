@@ -1,3 +1,5 @@
+# from ..shop import app
+# engine = create_engine('mysql+pymysql://remoteApplication:abc%40123@35.188.152.5/onlineshopping')
 from sqlalchemy import Column, String, Integer, Date, Numeric, \
     Text, DateTime, ForeignKey
 from datetime import datetime
@@ -5,9 +7,8 @@ from sqlalchemy.orm import sessionmaker, relationship
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 import os
-# from ..shop import app
-# engine = create_engine('mysql+pymysql://remoteApplication:abc%40123@35.188.152.5/onlineshopping')
-
+# engine = create_engine('mysql+pymysql://root:@34.67.70.132/onlineshopping')
+# engine = create_engine('mysql+pymysql://root:my-secret-pw@host.docker.internal:3306/onlineshopping')
 
 engine = create_engine(os.environ.get("MYSQL_CONNECTION_STRING"))
 Base = declarative_base()
@@ -15,7 +16,7 @@ DBSession = sessionmaker(bind=engine)
 
 class Register(Base):
     __tablename__ = 'register'
-    print("I am in Register class")
+
     id = Column(Integer, primary_key=True)
     name = Column(String(50), unique=False)
     username = Column(String(50), unique=True)
@@ -85,6 +86,7 @@ class Addproduct(Base):
     image_1 = Column(String(150), nullable=False, default='image1.jpg')
     image_2 = Column(String(150), nullable=False, default='image2.jpg')
     image_3 = Column(String(150), nullable=False, default='image3.jpg')
+    keywords = Column(Text, default='product')
     condition = Column(Text, default='product')
 
     def __init__(self, id, name, price, discount, stock, colors, desc, pub_date, category_id,
@@ -105,9 +107,12 @@ class Addproduct(Base):
         self.image_2 = image_2
         self.image_3 = image_3
 
+    def getDict(self, obj):
+        return obj.__dict__
+
 class cart(Base):
     __tablename__ = 'cart'
-    id = Column(Integer, primary_key=True, autoincrement=True)
+    id = Column(Integer, primary_key=True)
     product_id = Column(Integer, nullable=True)
     customer_id = Column(Integer, nullable=True)
     name = Column(String(80), nullable=False)
@@ -137,5 +142,3 @@ class cart(Base):
         self.image_1 = image_1
         self.image_2 = image_2
         self.image_3 = image_3
-
-

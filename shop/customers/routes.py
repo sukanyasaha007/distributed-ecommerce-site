@@ -1,12 +1,10 @@
 from flask import render_template,session, redirect,url_for,flash, make_response
 from flask_login import login_required, current_user, logout_user, login_user
-from shop import app,db, bcrypt
+from shop import app,db, soap_host
 from .forms import CustomerRegisterForm, CustomerLoginFrom, RatingForm
-# from .forms import  RatingForm
 from .model import Register, CustomerOrder, Rating
 from shop.products.models import Addproduct, SoldProducts
-from flask_login import current_user as buyer
-# from .model import Rating
+from shop.carts.carts import clearcart
 from shop import start_timer, stop_timer
 import random
 import secrets
@@ -14,10 +12,8 @@ import pdfkit
 import stripe
 import zeep
 import time
-import grpc
-# from json import jsonify
+
 from shop.grpc_server.onlineshopping_pb2 import AccountCreationRequest, AccountLoginRequest
-from shop.grpc_server.onlineshopping_pb2_grpc import BuyerActionsStub
 
 from flask import request
 from shop import grpc_client
@@ -27,6 +23,7 @@ stripe.api_key ='sk_test_51IN5nDCVZ5Yf06wROWN3sRW7aVEhhCfo3obH4jNrU1MuzrOVeLS03h
 
 @app.route('/payment',methods=['POST'])
 def payment():
+    resp_time = start_timer()
     invoice = request.form.get('invoice')
     amount = request.form.get('amount')
     customer = stripe.Customer.create(
@@ -52,16 +49,19 @@ def payment():
             soldproducts= SoldProducts.query.filter_by(product=product.name).first()
             soldproducts.update_stock(sellername=soldproducts.name, prod=product.name, quantity_sold=prod['quantity'])
             # prods[seller.name]= product.name
+            clearcart()
             db.session.commit()
+
+            stop_timer(resp_time, "makePayment")
     return redirect(url_for('thanks'))
 
 
 def makeTransaction(order):
-    transport = zeep.Transport(cache=None)
-    # client = zeep.Client("host.docker.internal:8000/?WSDL", transport=transport)
-    st = time.time()
-    # result = client.service.slow_request()  # takes 1 sec
-    print("Time: %.2f" % (time.time() - st))
+    # resp_time = start_timer()
+    # transport = zeep.Transport(cache=None)
+    # client = zeep.Client(soap_host+"/?WSDL", transport=transport)
+    # result = client.service.slow_request()
+    # stop_timer(resp_time, "soapServer")
     return True
 
 @app.route('/thanks')
@@ -70,6 +70,7 @@ def thanks():
 
 @app.route('/rating/<seller>/<product>', methods=['GET','POST'])
 def rating(seller, product):
+    resp_time = start_timer()
     form= RatingForm()
     if form.validate_on_submit():
         id = random.randint(0, 10000)
@@ -77,14 +78,15 @@ def rating(seller, product):
         db.session.add(rating)
         flash(f'Thank you for submitting your rating', 'success')
         db.session.commit()
+        stop_timer(resp_time, "rateSeller")
         return redirect(url_for('displayOrders'))
     return render_template('customer/rating.html', form=form, product=product, seller=seller)
 
 @app.route('/customer/register', methods=['GET','POST'])
 def customer_register():
+    resp_time = start_timer()
     form = CustomerRegisterForm()
     if form.validate_on_submit():
-        resp_time = start_timer()
         input_request = AccountCreationRequest \
             (buyer_id=random.randint(0, 10000),
              buyer_name=form.name.data,
@@ -115,11 +117,10 @@ def customer_register():
 
 @app.route('/customer/login', methods=['GET','POST'])
 def customerLogin():
-    resp_time= start_timer()
+    resp_time = start_timer()
     form = CustomerLoginFrom()
     try:
         if form.validate_on_submit():
-            resp_time = start_timer()
             input_request = AccountLoginRequest(buyer_username=form.email.data, buyer_password=form.password.data)
             # user = Register.query.filter_by(email=form.email.data).first()
             user = grpc_client.login(input_request)
@@ -131,6 +132,7 @@ def customerLogin():
             if user.is_active == "true":
                 login_user(newUser)
                 flash('You are login now!', 'success')
+                stop_timer(resp_time, "buyerLogin")
                 return redirect(url_for('home'))
             else:
                 flash('Incorrect email and password', 'danger')
@@ -142,7 +144,10 @@ def customerLogin():
 
 @app.route('/customer/logout')
 def customer_logout():
+    resp_time = start_timer()
     logout_user()
+    session.clear()
+    stop_timer(resp_time, "userLogout")
     return redirect(url_for('home'))
 
 def updateshoppingcart():
@@ -155,6 +160,7 @@ def updateshoppingcart():
 @app.route('/getorder')
 @login_required
 def get_order():
+    resp_time = start_timer()
     if current_user.is_authenticated:
         customer_id = current_user.id
         invoice = secrets.token_hex(5)
@@ -166,6 +172,7 @@ def get_order():
             db.session.commit()
             session.pop('Shoppingcart')
             flash('Your order has been sent successfully','success')
+            stop_timer(resp_time, "getorder")
             return redirect(url_for('orders',invoice=invoice))
         except Exception as e:
             print(e)
@@ -177,6 +184,7 @@ def get_order():
 @app.route('/orders/<invoice>')
 @login_required
 def orders(invoice):
+    resp_time = start_timer()
     if current_user.is_authenticated:
         grandTotal = 0
         subTotal = 0
@@ -189,7 +197,7 @@ def orders(invoice):
             subTotal -= discount
             tax = ("%.2f" % (.06 * float(subTotal)))
             grandTotal = ("%.2f" % (1.06 * float(subTotal)))
-
+            stop_timer(resp_time, "getFinalOrder")
     else:
         return redirect(url_for('customerLogin'))
     return render_template('customer/order.html', invoice=invoice, tax=tax,subTotal=subTotal,grandTotal=grandTotal,customer=customer,orders=orders)
@@ -197,6 +205,7 @@ def orders(invoice):
 @app.route('/displayorders')
 @login_required
 def displayOrders():
+    resp_time = start_timer()
     if current_user.is_authenticated:
         sellers = []
         grandTotal = 0
@@ -205,18 +214,6 @@ def displayOrders():
         customer = Register.query.filter_by(id = customer_id).first()
         orders = CustomerOrder.query.filter_by(customer_id = customer_id)
         finalOrders = []
-        # for k in orders:
-        #     for _key, product in k.orders.items():
-        #         soldproducts = SoldProducts.query.filter_by(product = product['name']).first()
-        #         print(product['name'])
-        #         if soldproducts != None:
-        #             finalOrders.append(k)
-        #             sellers.append(soldproducts.name)
-        #             discount = (product['discount']/100) * float(product['price'])
-        #             subTotal += float(product['price']) * int(product['quantity'])
-        #             subTotal -= discount
-        #             tax = ("%.2f" % (.06 * float(subTotal)))
-        #             grandTotal = ("%.2f" % (1.06 * float(subTotal)))
         if(orders.count() > 0):
             for k in orders:
                 for _key, product in k.orders.items():
@@ -230,13 +227,13 @@ def displayOrders():
                         subTotal -= discount
                         tax = ("%.2f" % (.06 * float(subTotal)))
                         grandTotal = ("%.2f" % (1.06 * float(subTotal)))
-
+                        stop_timer(resp_time, "displayOrders")
         else:
             flash("You have no orders", 'success')
             return redirect(url_for('home'))
+
     else:
-       return redirect(url_for('customerLogin'))
-    # return render_template('customer/displayOrders.html', tax=tax,subTotal=subTotal,grandTotal=grandTotal,customer=customer,orders=finalOrders, sellers=sellers)
+        return redirect(url_for('customerLogin'))
     return render_template('customer/displayOrders.html', tax=tax,subTotal=subTotal,grandTotal=grandTotal,customer=customer,orders=finalOrders, sellers=sellers, noorders = len(finalOrders))
 
 
@@ -264,6 +261,5 @@ def get_pdf(invoice):
             response.headers['content-Disposition'] ='inline; filename='+invoice+'.pdf'
             return response
     return request(url_for('orders'))
-
 
 

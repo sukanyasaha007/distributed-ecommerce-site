@@ -1,7 +1,7 @@
 import random
 
 from flask import render_template,session, request,redirect,url_for,flash
-from shop import app, db, bcrypt, grpc_client, grpc_client_seller
+from shop import app, db, bcrypt, grpc_client,grpc_client_seller
 from .forms import LoginForm
 # from .models import User
 from .models import SellerProducts
@@ -17,6 +17,7 @@ from flask_login import current_user, logout_user, login_user, login_required
 from ..customers.forms import CustomerRegisterForm, CustomerLoginFrom
 from ..customers.model import Register, Rating
 from ..grpc_server.onlineshopping_pb2 import AccountCreationRequest, AccountLoginRequest
+
 
 from ..grpc_server.seller_pb2 import SellerAddProductsRequest
 @app.route('/admin')
@@ -85,13 +86,11 @@ def admin_login():
                                 email=user.buyer_email, password=user.buyer_password, country=user.buyer_country,
                                 city=user.buyer_city, contact=user.buyer_contact, address=user.buyer_address,
                                 zipcode=user.buyer_zipcode, itemspurchased=user.items_purchased)
-            stop_timer(resp_time, "admin_login")
-            print("i am outside of active")
-            # session.
+            # stop_timer(resp_time, "admin_login")
             if user.is_active == "true":
-                print("i am inside of active")
                 login_user(newUser)
                 flash('You are login now!', 'success')
+                stop_timer(resp_time, "adminLogin")
                 return redirect(url_for('admin'))
             else:
                 flash('Incorrect email and password', 'danger')
@@ -111,7 +110,6 @@ def seller_products():
         # print(products_)
         stop_timer(resp_time, "seller_products_view")
         return render_template('admin/seller_products.html', title='Seller Products', products=products, name= name)
-        
 
 def getRatingCount(name):
     rating = Rating.query.filter_by(sellername=name).all()
@@ -128,24 +126,11 @@ def getRatingCount(name):
         return 0, 0
 
 @app.route('/seller/soldproducts', methods=['GET','POST'])
-@login_required
 def sold_products():
     resp_time= start_timer()
     print(current_user)
     if current_user.is_authenticated:
         name= current_user.name
-        # json=[]
-        # input_request= SellerAddProductsRequest(\
-        #     )
-        # response = grpc_client_seller.SellerAddProducts(input_request)
-        # response = grpc_client.createAccount(input_request)
-        # stop_timer(resp_time, "sellerCreateAccount")
-        # if (response.status == "success"):
-        #     flash(f'Welcome {form.name.data} Thank you for registering! Login now', 'success')
-        #     return redirect(url_for('admin_login'))
-        # else:
-        #     flash(f'Error in registering for {form.name.data}. Try again', 'danger')
-        #     return redirect(url_for('adminRegister'))
         soldproducts= SoldProducts.query.filter_by(name= name).all()
         like, dislike = getRatingCount(name)
         sold_quant={}

@@ -19,7 +19,7 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   syntax='proto3',
   serialized_options=None,
   create_key=_descriptor._internal_create_key,
-  serialized_pb=b'\n\x14onlineshopping.proto\"\x9f\x02\n\x16\x41\x63\x63ountCreationRequest\x12\x10\n\x08\x62uyer_id\x18\x01 \x01(\x05\x12\x12\n\nbuyer_name\x18\x02 \x01(\t\x12\x13\n\x0b\x62uyer_email\x18\x03 \x01(\t\x12\x16\n\x0e\x62uyer_username\x18\x04 \x01(\t\x12\x16\n\x0e\x62uyer_password\x18\x05 \x01(\t\x12\x17\n\x0fitems_purchased\x18\x06 \x01(\x05\x12\x15\n\rbuyer_country\x18\x07 \x01(\t\x12\x12\n\nbuyer_city\x18\x08 \x01(\t\x12\x15\n\rbuyer_contact\x18\t \x01(\t\x12\x15\n\rbuyer_address\x18\n \x01(\t\x12\x15\n\rbuyer_zipcode\x18\x0b \x01(\t\x12\x11\n\tis_active\x18\x0c \x01(\t\"E\n\x13\x41\x63\x63ountLoginRequest\x12\x16\n\x0e\x62uyer_username\x18\x03 \x01(\t\x12\x16\n\x0e\x62uyer_password\x18\x04 \x01(\t\")\n\x17\x41\x63\x63ountCreationResponse\x12\x0e\n\x06status\x18\x01 \x01(\t\"5\n\x08\x41\x63\x63ounts\x12)\n\x08\x61\x63\x63ounts\x18\x01 \x03(\x0b\x32\x17.AccountCreationRequest\"\x19\n\nGetAccount\x12\x0b\n\x03\x61\x63\x63\x18\x01 \x01(\t\"\'\n\x14SearchProductRequest\x12\x0f\n\x07product\x18\x01 \x01(\t\":\n\x15SearchProductResponse\x12!\n\x08products\x18\x01 \x03(\x0b\x32\x0f.ProductDetails\"\x0c\n\nGetProduct\"\x98\x02\n\x0eProductDetails\x12\n\n\x02id\x18\x01 \x01(\x05\x12\x0c\n\x04name\x18\x02 \x01(\t\x12\r\n\x05price\x18\x03 \x01(\t\x12\x10\n\x08\x64iscount\x18\x04 \x01(\x05\x12\r\n\x05stock\x18\x05 \x01(\x05\x12\x0e\n\x06\x63olors\x18\x06 \x01(\t\x12\x0c\n\x04\x64\x65sc\x18\x07 \x01(\t\x12\x10\n\x08pub_date\x18\x08 \x01(\t\x12\x13\n\x0b\x63\x61tegory_id\x18\t \x01(\x05\x12\x10\n\x08\x63\x61tegory\x18\n \x01(\t\x12\x10\n\x08\x62rand_id\x18\x0b \x01(\x05\x12\r\n\x05\x62rand\x18\x0c \x01(\t\x12\x0f\n\x07image_1\x18\r \x01(\t\x12\x0f\n\x07image_2\x18\x0e \x01(\t\x12\x0f\n\x07image_3\x18\x0f \x01(\t\x12\x11\n\tcondition\x18\x10 \x01(\t\"P\n\x10\x41\x64\x64ToCartRequest\x12\x12\n\ncustomerId\x18\x01 \x01(\t\x12(\n\x08products\x18\x02 \x01(\x0b\x32\x16.SearchProductResponse\"2\n\x11\x41\x64\x64ToCartResponse\x12\x0e\n\x06status\x18\x01 \x01(\t\x12\r\n\x05price\x18\x02 \x01(\t2\xab\x02\n\x0c\x42uyerActions\x12\x42\n\rcreateAccount\x12\x17.AccountCreationRequest\x1a\x18.AccountCreationResponse\x12\x36\n\x05login\x12\x14.AccountLoginRequest\x1a\x17.AccountCreationRequest\x12\x37\n\x06search\x12\x15.SearchProductRequest\x1a\x16.SearchProductResponse\x12\x32\n\x0bgetProducts\x12\x0b.GetProduct\x1a\x16.SearchProductResponse\x12\x32\n\taddToCart\x12\x11.AddToCartRequest\x1a\x12.AddToCartResponseb\x06proto3'
+  serialized_pb=b'\n\x14onlineshopping.proto\"\x9f\x02\n\x16\x41\x63\x63ountCreationRequest\x12\x10\n\x08\x62uyer_id\x18\x01 \x01(\x05\x12\x12\n\nbuyer_name\x18\x02 \x01(\t\x12\x13\n\x0b\x62uyer_email\x18\x03 \x01(\t\x12\x16\n\x0e\x62uyer_username\x18\x04 \x01(\t\x12\x16\n\x0e\x62uyer_password\x18\x05 \x01(\t\x12\x17\n\x0fitems_purchased\x18\x06 \x01(\x05\x12\x15\n\rbuyer_country\x18\x07 \x01(\t\x12\x12\n\nbuyer_city\x18\x08 \x01(\t\x12\x15\n\rbuyer_contact\x18\t \x01(\t\x12\x15\n\rbuyer_address\x18\n \x01(\t\x12\x15\n\rbuyer_zipcode\x18\x0b \x01(\t\x12\x11\n\tis_active\x18\x0c \x01(\t\"E\n\x13\x41\x63\x63ountLoginRequest\x12\x16\n\x0e\x62uyer_username\x18\x03 \x01(\t\x12\x16\n\x0e\x62uyer_password\x18\x04 \x01(\t\")\n\x17\x41\x63\x63ountCreationResponse\x12\x0e\n\x06status\x18\x01 \x01(\t\"5\n\x08\x41\x63\x63ounts\x12)\n\x08\x61\x63\x63ounts\x18\x01 \x03(\x0b\x32\x17.AccountCreationRequest\"\x19\n\nGetAccount\x12\x0b\n\x03\x61\x63\x63\x18\x01 \x01(\t\"0\n\x1aSearchProductRequestByDesc\x12\x12\n\nsearchword\x18\x01 \x01(\t\"\'\n\x14SearchProductRequest\x12\x0f\n\x07product\x18\x01 \x01(\t\":\n\x15SearchProductResponse\x12!\n\x08products\x18\x01 \x03(\x0b\x32\x0f.ProductDetails\"\x0c\n\nGetProduct\"\x98\x02\n\x0eProductDetails\x12\n\n\x02id\x18\x01 \x01(\x05\x12\x0c\n\x04name\x18\x02 \x01(\t\x12\r\n\x05price\x18\x03 \x01(\t\x12\x10\n\x08\x64iscount\x18\x04 \x01(\x05\x12\r\n\x05stock\x18\x05 \x01(\x05\x12\x0e\n\x06\x63olors\x18\x06 \x01(\t\x12\x0c\n\x04\x64\x65sc\x18\x07 \x01(\t\x12\x10\n\x08pub_date\x18\x08 \x01(\t\x12\x13\n\x0b\x63\x61tegory_id\x18\t \x01(\x05\x12\x10\n\x08\x63\x61tegory\x18\n \x01(\t\x12\x10\n\x08\x62rand_id\x18\x0b \x01(\x05\x12\r\n\x05\x62rand\x18\x0c \x01(\t\x12\x0f\n\x07image_1\x18\r \x01(\t\x12\x0f\n\x07image_2\x18\x0e \x01(\t\x12\x0f\n\x07image_3\x18\x0f \x01(\t\x12\x11\n\tcondition\x18\x10 \x01(\t\"P\n\x10\x41\x64\x64ToCartRequest\x12\x12\n\ncustomerId\x18\x01 \x01(\t\x12(\n\x08products\x18\x02 \x01(\x0b\x32\x16.SearchProductResponse\"L\n\x15UpdateproductQuantity\x12\x10\n\x08\x63ustomer\x18\x01 \x01(\x05\x12\x0f\n\x07product\x18\x02 \x01(\t\x12\x10\n\x08quantity\x18\x03 \x01(\x05\"$\n\x0eGetCartRequest\x12\x12\n\ncustomerId\x18\x01 \x01(\t\"2\n\x11\x41\x64\x64ToCartResponse\x12\x0e\n\x06status\x18\x01 \x01(\t\x12\r\n\x05price\x18\x02 \x01(\t2\xf8\x03\n\x0c\x42uyerActions\x12\x42\n\rcreateAccount\x12\x17.AccountCreationRequest\x1a\x18.AccountCreationResponse\x12\x36\n\x05login\x12\x14.AccountLoginRequest\x1a\x17.AccountCreationRequest\x12\x37\n\x06search\x12\x15.SearchProductRequest\x1a\x16.SearchProductResponse\x12\x32\n\x0bgetProducts\x12\x0b.GetProduct\x1a\x16.SearchProductResponse\x12\x32\n\taddToCart\x12\x11.AddToCartRequest\x1a\x12.AddToCartResponse\x12\x36\n\x0bgetFromcart\x12\x0f.GetCartRequest\x1a\x16.SearchProductResponse\x12N\n\x17getProductsBySearchword\x12\x1b.SearchProductRequestByDesc\x1a\x16.SearchProductResponse\x12\x43\n\x15updateproductQuantity\x12\x16.UpdateproductQuantity\x1a\x12.AddToCartResponseb\x06proto3'
 )
 
 
@@ -269,6 +269,38 @@ _GETACCOUNT = _descriptor.Descriptor(
 )
 
 
+_SEARCHPRODUCTREQUESTBYDESC = _descriptor.Descriptor(
+  name='SearchProductRequestByDesc',
+  full_name='SearchProductRequestByDesc',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  create_key=_descriptor._internal_create_key,
+  fields=[
+    _descriptor.FieldDescriptor(
+      name='searchword', full_name='SearchProductRequestByDesc.searchword', index=0,
+      number=1, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=b"".decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+  ],
+  extensions=[
+  ],
+  nested_types=[],
+  enum_types=[
+  ],
+  serialized_options=None,
+  is_extendable=False,
+  syntax='proto3',
+  extension_ranges=[],
+  oneofs=[
+  ],
+  serialized_start=510,
+  serialized_end=558,
+)
+
+
 _SEARCHPRODUCTREQUEST = _descriptor.Descriptor(
   name='SearchProductRequest',
   full_name='SearchProductRequest',
@@ -296,8 +328,8 @@ _SEARCHPRODUCTREQUEST = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=510,
-  serialized_end=549,
+  serialized_start=560,
+  serialized_end=599,
 )
 
 
@@ -328,8 +360,8 @@ _SEARCHPRODUCTRESPONSE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=551,
-  serialized_end=609,
+  serialized_start=601,
+  serialized_end=659,
 )
 
 
@@ -353,8 +385,8 @@ _GETPRODUCT = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=611,
-  serialized_end=623,
+  serialized_start=661,
+  serialized_end=673,
 )
 
 
@@ -490,8 +522,8 @@ _PRODUCTDETAILS = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=626,
-  serialized_end=906,
+  serialized_start=676,
+  serialized_end=956,
 )
 
 
@@ -529,8 +561,86 @@ _ADDTOCARTREQUEST = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=908,
-  serialized_end=988,
+  serialized_start=958,
+  serialized_end=1038,
+)
+
+
+_UPDATEPRODUCTQUANTITY = _descriptor.Descriptor(
+  name='UpdateproductQuantity',
+  full_name='UpdateproductQuantity',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  create_key=_descriptor._internal_create_key,
+  fields=[
+    _descriptor.FieldDescriptor(
+      name='customer', full_name='UpdateproductQuantity.customer', index=0,
+      number=1, type=5, cpp_type=1, label=1,
+      has_default_value=False, default_value=0,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='product', full_name='UpdateproductQuantity.product', index=1,
+      number=2, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=b"".decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='quantity', full_name='UpdateproductQuantity.quantity', index=2,
+      number=3, type=5, cpp_type=1, label=1,
+      has_default_value=False, default_value=0,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+  ],
+  extensions=[
+  ],
+  nested_types=[],
+  enum_types=[
+  ],
+  serialized_options=None,
+  is_extendable=False,
+  syntax='proto3',
+  extension_ranges=[],
+  oneofs=[
+  ],
+  serialized_start=1040,
+  serialized_end=1116,
+)
+
+
+_GETCARTREQUEST = _descriptor.Descriptor(
+  name='GetCartRequest',
+  full_name='GetCartRequest',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  create_key=_descriptor._internal_create_key,
+  fields=[
+    _descriptor.FieldDescriptor(
+      name='customerId', full_name='GetCartRequest.customerId', index=0,
+      number=1, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=b"".decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+  ],
+  extensions=[
+  ],
+  nested_types=[],
+  enum_types=[
+  ],
+  serialized_options=None,
+  is_extendable=False,
+  syntax='proto3',
+  extension_ranges=[],
+  oneofs=[
+  ],
+  serialized_start=1118,
+  serialized_end=1154,
 )
 
 
@@ -568,8 +678,8 @@ _ADDTOCARTRESPONSE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=990,
-  serialized_end=1040,
+  serialized_start=1156,
+  serialized_end=1206,
 )
 
 _ACCOUNTS.fields_by_name['accounts'].message_type = _ACCOUNTCREATIONREQUEST
@@ -580,11 +690,14 @@ DESCRIPTOR.message_types_by_name['AccountLoginRequest'] = _ACCOUNTLOGINREQUEST
 DESCRIPTOR.message_types_by_name['AccountCreationResponse'] = _ACCOUNTCREATIONRESPONSE
 DESCRIPTOR.message_types_by_name['Accounts'] = _ACCOUNTS
 DESCRIPTOR.message_types_by_name['GetAccount'] = _GETACCOUNT
+DESCRIPTOR.message_types_by_name['SearchProductRequestByDesc'] = _SEARCHPRODUCTREQUESTBYDESC
 DESCRIPTOR.message_types_by_name['SearchProductRequest'] = _SEARCHPRODUCTREQUEST
 DESCRIPTOR.message_types_by_name['SearchProductResponse'] = _SEARCHPRODUCTRESPONSE
 DESCRIPTOR.message_types_by_name['GetProduct'] = _GETPRODUCT
 DESCRIPTOR.message_types_by_name['ProductDetails'] = _PRODUCTDETAILS
 DESCRIPTOR.message_types_by_name['AddToCartRequest'] = _ADDTOCARTREQUEST
+DESCRIPTOR.message_types_by_name['UpdateproductQuantity'] = _UPDATEPRODUCTQUANTITY
+DESCRIPTOR.message_types_by_name['GetCartRequest'] = _GETCARTREQUEST
 DESCRIPTOR.message_types_by_name['AddToCartResponse'] = _ADDTOCARTRESPONSE
 _sym_db.RegisterFileDescriptor(DESCRIPTOR)
 
@@ -623,6 +736,13 @@ GetAccount = _reflection.GeneratedProtocolMessageType('GetAccount', (_message.Me
   })
 _sym_db.RegisterMessage(GetAccount)
 
+SearchProductRequestByDesc = _reflection.GeneratedProtocolMessageType('SearchProductRequestByDesc', (_message.Message,), {
+  'DESCRIPTOR' : _SEARCHPRODUCTREQUESTBYDESC,
+  '__module__' : 'onlineshopping_pb2'
+  # @@protoc_insertion_point(class_scope:SearchProductRequestByDesc)
+  })
+_sym_db.RegisterMessage(SearchProductRequestByDesc)
+
 SearchProductRequest = _reflection.GeneratedProtocolMessageType('SearchProductRequest', (_message.Message,), {
   'DESCRIPTOR' : _SEARCHPRODUCTREQUEST,
   '__module__' : 'onlineshopping_pb2'
@@ -658,6 +778,20 @@ AddToCartRequest = _reflection.GeneratedProtocolMessageType('AddToCartRequest', 
   })
 _sym_db.RegisterMessage(AddToCartRequest)
 
+UpdateproductQuantity = _reflection.GeneratedProtocolMessageType('UpdateproductQuantity', (_message.Message,), {
+  'DESCRIPTOR' : _UPDATEPRODUCTQUANTITY,
+  '__module__' : 'onlineshopping_pb2'
+  # @@protoc_insertion_point(class_scope:UpdateproductQuantity)
+  })
+_sym_db.RegisterMessage(UpdateproductQuantity)
+
+GetCartRequest = _reflection.GeneratedProtocolMessageType('GetCartRequest', (_message.Message,), {
+  'DESCRIPTOR' : _GETCARTREQUEST,
+  '__module__' : 'onlineshopping_pb2'
+  # @@protoc_insertion_point(class_scope:GetCartRequest)
+  })
+_sym_db.RegisterMessage(GetCartRequest)
+
 AddToCartResponse = _reflection.GeneratedProtocolMessageType('AddToCartResponse', (_message.Message,), {
   'DESCRIPTOR' : _ADDTOCARTRESPONSE,
   '__module__' : 'onlineshopping_pb2'
@@ -674,8 +808,8 @@ _BUYERACTIONS = _descriptor.ServiceDescriptor(
   index=0,
   serialized_options=None,
   create_key=_descriptor._internal_create_key,
-  serialized_start=1043,
-  serialized_end=1342,
+  serialized_start=1209,
+  serialized_end=1713,
   methods=[
   _descriptor.MethodDescriptor(
     name='createAccount',
@@ -723,6 +857,36 @@ _BUYERACTIONS = _descriptor.ServiceDescriptor(
     index=4,
     containing_service=None,
     input_type=_ADDTOCARTREQUEST,
+    output_type=_ADDTOCARTRESPONSE,
+    serialized_options=None,
+    create_key=_descriptor._internal_create_key,
+  ),
+  _descriptor.MethodDescriptor(
+    name='getFromcart',
+    full_name='BuyerActions.getFromcart',
+    index=5,
+    containing_service=None,
+    input_type=_GETCARTREQUEST,
+    output_type=_SEARCHPRODUCTRESPONSE,
+    serialized_options=None,
+    create_key=_descriptor._internal_create_key,
+  ),
+  _descriptor.MethodDescriptor(
+    name='getProductsBySearchword',
+    full_name='BuyerActions.getProductsBySearchword',
+    index=6,
+    containing_service=None,
+    input_type=_SEARCHPRODUCTREQUESTBYDESC,
+    output_type=_SEARCHPRODUCTRESPONSE,
+    serialized_options=None,
+    create_key=_descriptor._internal_create_key,
+  ),
+  _descriptor.MethodDescriptor(
+    name='updateproductQuantity',
+    full_name='BuyerActions.updateproductQuantity',
+    index=7,
+    containing_service=None,
+    input_type=_UPDATEPRODUCTQUANTITY,
     output_type=_ADDTOCARTRESPONSE,
     serialized_options=None,
     create_key=_descriptor._internal_create_key,
