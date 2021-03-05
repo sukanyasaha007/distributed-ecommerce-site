@@ -9,6 +9,9 @@ from flask_login import current_user
 import random
 import grpc
 from shop import grpc_client
+from ..customers.model import Register, Rating
+from shop.grpc_server.onlineshopping_pb2 import SearchProductRequestByDesc, SearchProductResponse, GetCartRequest
+
 
 def brands():
     brands = Brand.query.join(Addproduct, (Brand.id == Addproduct.brand_id)).all()
@@ -22,22 +25,46 @@ def categories():
 
 @app.route('/')
 def home():
+    resp_time = start_timer()
     page = request.args.get('page',1, type=int)
     products = Addproduct.query.filter(Addproduct.stock > 0).order_by(Addproduct.id.desc()).paginate(page=page, per_page=8)
+    stop_timer(resp_time, "getHomePage")
     return render_template('products/index.html', products=products,brands=brands(),categories=categories())
 
 @app.route('/result')
 def result():
     resp_time = start_timer()
     searchword = request.args.get('q')
-    products = Addproduct.query.msearch(searchword, fields=['name','desc'] , limit=6)
+    s = SearchProductRequestByDesc(searchword=searchword)
+    test = grpc_client.getProductsBySearchword(s)
+    for x in test.products: print(x)
+    # products = Addproduct.query.msearch(searchword, fields=['name','desc'] , limit=6)
     stop_timer(resp_time, "searchProducts")
-    return render_template('products/result.html',products=products,brands=brands(),categories=categories())
+    return render_template('products/result.html',products=test.products,brands=brands(),categories=categories())
+
+def getAvgRatingCount(name):
+    rating = Rating.query.filter_by(sellername=name).all()
+    if(len(rating) > 0):
+        like = 0
+        for r in rating:
+            if r.rating == 1:
+                like += 1
+        return like
+    else:
+        return "No rating yet"
 
 @app.route('/product/<int:id>')
 def single_page(id):
+    resp_time = start_timer()
     product = Addproduct.query.get_or_404(id)
-    return render_template('products/single_page.html',product=product,brands=brands(),categories=categories())
+    seller = SoldProducts.query.filter_by(product=product.name).first()
+    if(seller == None):
+        return render_template('products/single_page.html', product=product, brands=brands(), categories=categories(),
+                               seller="unknown", avgrating="No rating")
+    else:
+        avgRating = getAvgRatingCount(seller.name)
+    stop_timer(resp_time, "getProductDetails")
+    return render_template('products/single_page.html',product=product,brands=brands(),categories=categories(),seller = seller.name, avgrating=avgRating)
 
 
 
@@ -141,6 +168,7 @@ def deletecat(id):
 
 @app.route('/addproduct', methods=['GET','POST'])
 def addproduct():
+    resp_time = start_timer()
     if not session:
         return "please login first"
     form = Addproducts(request.form)
@@ -170,12 +198,14 @@ def addproduct():
             db.session.add(soldproducts)
             db.session.commit()
         flash(f'The product {name} was added in database','success')
+        stop_timer(resp_time, "addProduct")
         return redirect(url_for('admin'))
     return render_template('products/addproduct.html', form=form, title='Add a Product', brands=brands,categories=categories)
 
 
 @app.route('/updateproduct/<int:id>', methods=['GET','POST'])
 def updateproduct(id):
+    resp_time = start_timer()
     if not session:
         return "please login first"
     form = Addproducts(request.form)
@@ -230,6 +260,7 @@ def updateproduct(id):
     form.description.data = product.desc
     brand = product.brand.name
     category = product.category.name
+    stop_timer(resp_time, "updateProduct")
     return render_template('products/addproduct.html', form=form, title='Update Product',getproduct=product, brands=brands,categories=categories)
 
 

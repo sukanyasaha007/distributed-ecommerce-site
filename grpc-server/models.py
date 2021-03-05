@@ -81,6 +81,7 @@ class Addproduct(Base):
     image_1 = Column(String(150), nullable=False, default='image1.jpg')
     image_2 = Column(String(150), nullable=False, default='image2.jpg')
     image_3 = Column(String(150), nullable=False, default='image3.jpg')
+    keywords = Column(Text, default='product')
     condition = Column(Text, default='product')
 
     def __init__(self, id, name, price, discount, stock, colors, desc, pub_date, category_id,
@@ -101,9 +102,12 @@ class Addproduct(Base):
         self.image_2 = image_2
         self.image_3 = image_3
 
+    def getDict(self, obj):
+        return obj.__dict__
+
 class cart(Base):
     __tablename__ = 'cart'
-    id = Column(Integer, primary_key=True, autoincrement=True)
+    id = Column(Integer, primary_key=True)
     product_id = Column(Integer, nullable=True)
     customer_id = Column(Integer, nullable=True)
     name = Column(String(80), nullable=False)

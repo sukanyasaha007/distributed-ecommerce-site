@@ -32,6 +32,10 @@ message GetAccount {
      string acc = 1;
 }
 
+message SearchProductRequestByDesc {
+     string searchword = 1;
+}
+
 message SearchProductRequest {
      string product = 1;
 }
@@ -67,6 +71,16 @@ message AddToCartRequest {
      SearchProductResponse products = 2;
 }
 
+message UpdateproductQuantity {
+     int32 customer = 1;
+     string product = 2;
+     int32 quantity = 3;
+}
+
+message GetCartRequest {
+     string customerId = 1;
+}
+
 message AddToCartResponse {
      string status = 1;
      string price = 2;
@@ -78,4 +92,7 @@ service BuyerActions {
     rpc search (SearchProductRequest) returns (SearchProductResponse);
     rpc getProducts (GetProduct) returns (SearchProductResponse);
     rpc addToCart (AddToCartRequest) returns (AddToCartResponse);
+    rpc getFromcart (GetCartRequest) returns (SearchProductResponse);
+    rpc getProductsBySearchword (SearchProductRequestByDesc) returns (SearchProductResponse);
+    rpc updateproductQuantity (UpdateproductQuantity) returns (AddToCartResponse);
 }

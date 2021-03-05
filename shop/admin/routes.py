@@ -89,6 +89,7 @@ def admin_login():
             if user.is_active == "true":
                 login_user(newUser)
                 flash('You are login now!', 'success')
+                stop_timer(resp_time, "adminLogin")
                 return redirect(url_for('admin'))
             else:
                 flash('Incorrect email and password', 'danger')

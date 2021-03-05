@@ -1,12 +1,31 @@
+import decimal
+
 import onlineshopping_pb2_grpc
+from mapper.object_mapper import ObjectMapper
 from datetime import datetime
+import random
+from bson import json_util
 from onlineshopping_pb2 import (
-    AccountCreationResponse, AccountCreationRequest, SearchProductResponse, ProductDetails, AddToCartResponse
+    AccountCreationResponse, AccountCreationRequest, SearchProductResponse, ProductDetails,
+    AddToCartResponse, SearchProductRequestByDesc
 )
 from models import Register, Base, DBSession, engine, Addproduct, cart
+import json
+from google.protobuf.json_format import Parse
 
 Base.metadata.create_all(engine)
 session = DBSession()
+
+
+class DecimalEncoder(json.JSONEncoder):
+    def default(self, o):
+        if isinstance(o, decimal.Decimal):
+            # wanted a simple yield str(o) in the next line,
+            # but that would mean a yield on the line with super(...),
+            # which wouldn't work (see my comment below), so...
+            return (str(o) for o in [o])
+        return super(DecimalEncoder, self).default(o)
+
 
 class BuyerActionService(onlineshopping_pb2_grpc.BuyerActionsServicer):
     def createAccount(self, request, context):
@@ -94,7 +113,8 @@ class BuyerActionService(onlineshopping_pb2_grpc.BuyerActionsServicer):
     def addToCart(self, request, context):
         print(request)
         try:
-            session.add(cart(product_id=request.products.products[0].id,
+            id = random.randint(0, 10000)
+            session.add(cart(id=id, product_id=request.products.products[0].id,
             customer_id = int(request.customerId),
             name = request.products.products[0].name,
             price = str(request.products.products[0].price),
@@ -110,6 +130,7 @@ class BuyerActionService(onlineshopping_pb2_grpc.BuyerActionsServicer):
             session.commit()
             return AddToCartResponse(status="success", price="23")
         except Exception as e:
+            print(e)
             return AddToCartResponse(status="failure", price="56")
 
         # json_docs = []
@@ -157,3 +178,88 @@ class BuyerActionService(onlineshopping_pb2_grpc.BuyerActionsServicer):
         except Exception as e:
             print(e)
         return SearchProductResponse(products=json_docs)
+
+
+    def getProductsBySearchword(self, request, context):
+        regex = r'.*' + request.searchword + '.*'
+        products = session.query(Addproduct).filter(Addproduct.desc.op('regexp')(regex) |
+                                                    Addproduct.name.op('regexp')(regex)).all()
+        listProducts = []
+        for product in products:
+            message = ProductDetails()
+            message.id = product.id
+            message.name = product.name
+            message.price = str(product.price)
+            message.discount = product.discount
+            message.stock = product.stock
+            message.colors = product.colors
+            message.desc = product.desc
+            message.pub_date = str(product.pub_date)
+            message.category_id = product.category_id
+            message.category = product.category.name
+            message.brand_id = product.brand_id
+            message.brand = product.brand.name
+            message.image_1 = product.image_1
+            message.image_2 = product.image_2
+            message.image_3 = product.image_3
+            if(product.condition == None):
+                message.condition = "new"
+            listProducts.append(message)
+        searchprodResponse = SearchProductResponse(products=listProducts)
+        return searchprodResponse
+
+    def getFromcart(self,  request, context):
+        products = session.query(cart).filter(cart.customer_id == int(request.customerId)).all()
+        listProducts = []
+        for product in products:
+            message = ProductDetails()
+            message.id = product.product_id
+            message.name = product.name
+            message.price = str(product.price)
+            message.discount = product.discount
+            message.stock = product.stock
+            message.colors = product.colors
+            message.desc = product.descp
+            message.pub_date = str(product.pub_date)
+            message.category_id = 123
+            message.category = "random"
+            message.brand_id = 123
+            message.brand = "random"
+            message.image_1 = product.image_1
+            message.image_2 = product.image_2
+            message.image_3 = product.image_3
+            message.condition = "new"
+            listProducts.append(message)
+
+        searchprodResponse = SearchProductResponse(products=listProducts)
+        return searchprodResponse
+
+    def updateproductQuantity(self,  request, context):
+        try:
+            if(request.quantity == -99999):
+                products = session.query(cart).filter(cart.customer_id == request.customer
+                                                  , cart.product_id == request.product).all()
+                for o in products:
+                    session.delete(o)
+                session.commit()
+                return AddToCartResponse(status="success", price="23")
+
+            if(request.quantity == 0):
+                products = session.query(cart).filter(cart.customer_id == request.customer).all()
+                for o in products:
+                    session.delete(o)
+                session.commit()
+                return AddToCartResponse(status="success", price="23")
+
+            products = session.query(cart).filter(cart.product_id == request.product , cart.customer_id == request.customer).first()
+            products.stock = request.quantity
+            session.commit()
+            return AddToCartResponse(status="success", price="23")
+        except Exception as e:
+            print(e)
+            return AddToCartResponse(status="failure", price="23")
+
+
+
+
+

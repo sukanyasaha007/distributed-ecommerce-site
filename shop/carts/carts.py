@@ -2,7 +2,7 @@ from flask import render_template, session, request, redirect, url_for, flash, c
 from shop import db, app, start_timer, stop_timer
 from shop.products.routes import brands, categories
 from flask_login import current_user
-from shop.grpc_server.onlineshopping_pb2 import SearchProductRequest, AddToCartRequest
+from shop.grpc_server.onlineshopping_pb2 import SearchProductRequest, AddToCartRequest, UpdateproductQuantity, GetCartRequest
 from shop.products.models import cart
 from shop import grpc_client
 
@@ -35,17 +35,18 @@ def AddCart():
                 if product_id in session['Shoppingcart']:
                     for key, item in session['Shoppingcart'].items():
                         if int(key) == int(product_id):
+                            grpc_client.updateproductQuantity(UpdateproductQuantity(customer=current_user.id,
+                                                              product=str(product_id),
+                                                                                    quantity=int(item['quantity'])+1))
                             session.modified = True
-                            qty = cart.query.filter_by(product_id=product_id).first()
-                            print(qty)
-                            qty.stock += 1
-                            db.session.commit()
                             item['quantity'] += 1
                 else:
-                    grpc_client.addToCart(AddToCartRequest(customerId=str(current_user.id), products=response))
                     session['Shoppingcart'] = MagerDicts(session['Shoppingcart'], DictItems)
+                    grpc_client.addToCart(AddToCartRequest(customerId=str(current_user.id), products=response))
                     return redirect(request.referrer)
             else:
+                res = grpc_client.addToCart(AddToCartRequest(customerId=str(current_user.id), products=response))
+                print(res.status)
                 session['Shoppingcart'] = DictItems
                 stop_timer(resp_time, "addTocart")
                 return redirect(request.referrer)
@@ -58,6 +59,15 @@ def AddCart():
 
 @app.route('/carts')
 def getCart():
+    resp_time = start_timer()
+    existing = grpc_client.getFromcart(GetCartRequest(customerId=str(current_user.id)))
+    prd = {}
+    if len(existing.products) != 0:
+        for i in existing.products:
+            prd[i.id] = {'color': i.colors, 'colors': i.colors,
+                         'discount': i.discount, 'image': i.image_1, 'name': i.name,
+                 'price': float(i.price), 'quantity': i.stock}
+        session['Shoppingcart'] = prd
     if 'Shoppingcart' not in session or len(session['Shoppingcart']) <= 0:
         return redirect(url_for('home'))
     subtotal = 0
@@ -68,12 +78,14 @@ def getCart():
         subtotal -= discount
         tax = ("%.2f" % (.06 * float(subtotal)))
         grandtotal = float("%.2f" % (1.06 * subtotal))
+    stop_timer(resp_time, "getcart")
     return render_template('products/carts.html', tax=tax, grandtotal=grandtotal, brands=brands(),
                            categories=categories())
 
 
 @app.route('/updatecart/<int:code>', methods=['POST'])
 def updatecart(code):
+    resp_time = start_timer()
     if 'Shoppingcart' not in session or len(session['Shoppingcart']) <= 0:
         return redirect(url_for('home'))
     if request.method == "POST":
@@ -83,9 +95,13 @@ def updatecart(code):
             session.modified = True
             for key, item in session['Shoppingcart'].items():
                 if int(key) == code:
+                    grpc_client.updateproductQuantity(UpdateproductQuantity(customer=current_user.id,
+                                                                            product=str(key),
+                                                                            quantity=int(quantity)))
                     item['quantity'] = quantity
                     item['color'] = color
                     flash('Item is updated!')
+                    stop_timer(resp_time, "updatedCart")
                     return redirect(url_for('getCart'))
         except Exception as e:
             print(e)
@@ -94,13 +110,17 @@ def updatecart(code):
 
 @app.route('/deleteitem/<int:id>')
 def deleteitem(id):
+    resp_time = start_timer()
     if 'Shoppingcart' not in session or len(session['Shoppingcart']) <= 0:
         return redirect(url_for('home'))
     try:
         session.modified = True
         for key, item in session['Shoppingcart'].items():
             if int(key) == id:
+                grpc_client.updateproductQuantity(UpdateproductQuantity(customer=current_user.id,
+                                                                        product=id, quantity=-99999))
                 session['Shoppingcart'].pop(key, None)
+                stop_timer(resp_time, "deleteItem")
                 return redirect(url_for('getCart'))
     except Exception as e:
         print(e)
@@ -110,6 +130,11 @@ def deleteitem(id):
 @app.route('/clearcart')
 def clearcart():
     try:
+        resp_time = start_timer()
+        print(current_user.id)
+        grpc_client.updateproductQuantity(UpdateproductQuantity(customer=current_user.id,
+                                                                product="387583568568", quantity=0))
+        stop_timer(resp_time, "clearcart")
         session.pop('Shoppingcart', None)
         return redirect(url_for('home'))
     except Exception as e:
