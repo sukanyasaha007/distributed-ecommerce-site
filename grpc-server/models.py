@@ -137,3 +137,5 @@ class cart(Base):
         self.image_1 = image_1
         self.image_2 = image_2
         self.image_3 = image_3
+
+

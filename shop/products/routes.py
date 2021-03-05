@@ -236,11 +236,13 @@ def updateproduct(id):
 @app.route('/deleteproduct/<int:id>', methods=['POST'])
 def deleteproduct(id):
     product = Addproduct.query.get_or_404(id)
+    print("i am in delete route for product ", product)
     if request.method =="POST":
         try:
             os.unlink(os.path.join(current_app.root_path, "static/images/" + product.image_1))
             os.unlink(os.path.join(current_app.root_path, "static/images/" + product.image_2))
             os.unlink(os.path.join(current_app.root_path, "static/images/" + product.image_3))
+            print("OS unlinked")
         except Exception as e:
             print(e)
         db.session.delete(product)

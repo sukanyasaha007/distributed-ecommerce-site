@@ -15,6 +15,8 @@ from flask_migrate import Migrate
 import grpc
 from shop.grpc_server.onlineshopping_pb2_grpc import BuyerActionsStub
 
+from shop.grpc_server.seller_pb2_grpc import SellerStub
+
 basedir = os.path.abspath(os.path.dirname(__file__))
 app = Flask(__name__)
 # app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:@localhost/onlineshopping'
@@ -57,6 +59,7 @@ login_manager.login_message = u"Please login first"
 channel = grpc.insecure_channel("[::]:50051")
 
 grpc_client = BuyerActionsStub(channel)
+grpc_client_seller= SellerStub(channel)
 socketio = SocketIO(app)
 
 @socketio.on('disconnect')

@@ -1,7 +1,7 @@
 import random
 
 from flask import render_template,session, request,redirect,url_for,flash
-from shop import app, db, bcrypt, grpc_client
+from shop import app, db, bcrypt, grpc_client, grpc_client_seller
 from .forms import LoginForm
 # from .models import User
 from .models import SellerProducts
@@ -18,7 +18,7 @@ from ..customers.forms import CustomerRegisterForm, CustomerLoginFrom
 from ..customers.model import Register, Rating
 from ..grpc_server.onlineshopping_pb2 import AccountCreationRequest, AccountLoginRequest
 
-
+from ..grpc_server.seller_pb2 import SellerAddProductsRequest
 @app.route('/admin')
 def admin():
     resp_time= start_timer()
@@ -128,27 +128,28 @@ def getRatingCount(name):
         return 0, 0
 
 @app.route('/seller/soldproducts', methods=['GET','POST'])
-# @login_required
+@login_required
 def sold_products():
     resp_time= start_timer()
     print(current_user)
     if current_user.is_authenticated:
         name= current_user.name
+        # json=[]
+        # input_request= SellerAddProductsRequest(\
+        #     )
+        # response = grpc_client_seller.SellerAddProducts(input_request)
+        # response = grpc_client.createAccount(input_request)
+        # stop_timer(resp_time, "sellerCreateAccount")
+        # if (response.status == "success"):
+        #     flash(f'Welcome {form.name.data} Thank you for registering! Login now', 'success')
+        #     return redirect(url_for('admin_login'))
+        # else:
+        #     flash(f'Error in registering for {form.name.data}. Try again', 'danger')
+        #     return redirect(url_for('adminRegister'))
         soldproducts= SoldProducts.query.filter_by(name= name).all()
         like, dislike = getRatingCount(name)
         sold_quant={}
         current_stock= {}
-        # for s in soldproducts:
-        #     print("soldproducts: ",s.name, 'product:', s.product, 'quantity sold:', s.quantity_sold, 'stock')#, s.stock)
-        #     sold= s.get_sold(sellername= s.name, prod= s.product)
-        #     sold_quant[s.product]= s.quantity_sold
-        #     stock_prod= Addproduct.query.filter_by(name=s.product).first()
-        #     current_stock[s.product]=stock_prod.stock
-        # print(current_stock)
-        # stop_timer(resp_time, "view_sold_products")
-        # return render_template('admin/sold_products.html', title='Sold Products', name= name, sold=sold_quant, current_stock= current_stock)#, product=soldproducts.product)
-
-        
         if(len(soldproducts) > 0):
             for s in soldproducts:
                 print("soldproducts: ",s.name, 'product:', s.product, 'quantity sold:', s.quantity_sold, 'stock')#, s.stock)
