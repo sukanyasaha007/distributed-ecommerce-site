@@ -6,9 +6,9 @@ from seller_pb2 import (
 )
 from models import Base, DBSession, engine, Addproduct
 
-from ..shop.products.models import SoldProducts
+# from ..shop.products.models import SoldProducts
 
-from ..shop.customers.model import Register, Rating
+# from ..shop.customers.model import Register, Rating
 
 # Base.metadata.create_all('mysql+pymysql://root:@localhost/onlineshopping')
 Base.metadata.create_all(engine)

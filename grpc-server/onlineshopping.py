@@ -8,7 +8,7 @@ import onlineshopping_pb2_grpc
 from BuyerActionService import BuyerActionService
 
 import seller_pb2_grpc
-from SellerActionService import SellerActionService
+from SellerActions import SellerActionService
 import os
 
 # _PORT = os.environ["PORT"]

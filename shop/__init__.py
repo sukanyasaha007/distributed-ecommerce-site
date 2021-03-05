@@ -34,6 +34,7 @@ configure_uploads(app, photos)
 patch_request_class(app)
 
 db = SQLAlchemy(app)
+# db.session.rollback()
 bcrypt = Bcrypt(app)
 search = Search()
 search.init_app(app)
