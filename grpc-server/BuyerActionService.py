@@ -4,7 +4,7 @@ import onlineshopping_pb2_grpc
 from mapper.object_mapper import ObjectMapper
 from datetime import datetime
 import random
-from bson import json_util
+# from bson import json_util
 from onlineshopping_pb2 import (
     AccountCreationResponse, AccountCreationRequest, SearchProductResponse, ProductDetails,
     AddToCartResponse, SearchProductRequestByDesc
