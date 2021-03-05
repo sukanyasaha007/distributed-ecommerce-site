@@ -15,7 +15,7 @@ import time
 from flask_login import current_user, logout_user, login_user, login_required
 
 from ..customers.forms import CustomerRegisterForm, CustomerLoginFrom
-from ..customers.model import Register
+from ..customers.model import Register, Rating
 from ..grpc_server.onlineshopping_pb2 import AccountCreationRequest, AccountLoginRequest
 
 
@@ -86,7 +86,10 @@ def admin_login():
                                 city=user.buyer_city, contact=user.buyer_contact, address=user.buyer_address,
                                 zipcode=user.buyer_zipcode, itemspurchased=user.items_purchased)
             stop_timer(resp_time, "admin_login")
+            print("i am outside of active")
+            # session.
             if user.is_active == "true":
+                print("i am inside of active")
                 login_user(newUser)
                 flash('You are login now!', 'success')
                 return redirect(url_for('admin'))
@@ -110,27 +113,57 @@ def seller_products():
         return render_template('admin/seller_products.html', title='Seller Products', products=products, name= name)
         
 
+def getRatingCount(name):
+    rating = Rating.query.filter_by(sellername=name).all()
+    if(len(rating) > 0):
+        like = 0
+        dislike = 0
+        for r in rating:
+            if r.rating == 1:
+                like += 1
+            else:
+                dislike +=1
+        return like, dislike
+    else:
+        return 0, 0
+
 @app.route('/seller/soldproducts', methods=['GET','POST'])
-@login_required
+# @login_required
 def sold_products():
     resp_time= start_timer()
     print(current_user)
     if current_user.is_authenticated:
         name= current_user.name
         soldproducts= SoldProducts.query.filter_by(name= name).all()
+        like, dislike = getRatingCount(name)
         sold_quant={}
         current_stock= {}
-        for s in soldproducts:
-            print("soldproducts: ",s.name, 'product:', s.product, 'quantity sold:', s.quantity_sold, 'stock')#, s.stock)
-            sold= s.get_sold(sellername= s.name, prod= s.product)
-            sold_quant[s.product]= s.quantity_sold
-            stock_prod= Addproduct.query.filter_by(name=s.product).first()
-            current_stock[s.product]=stock_prod.stock
-        print(current_stock)
-        stop_timer(resp_time, "view_sold_products")
-        return render_template('admin/sold_products.html', title='Sold Products', name= name, sold=sold_quant, current_stock= current_stock)#, product=soldproducts.product)
+        # for s in soldproducts:
+        #     print("soldproducts: ",s.name, 'product:', s.product, 'quantity sold:', s.quantity_sold, 'stock')#, s.stock)
+        #     sold= s.get_sold(sellername= s.name, prod= s.product)
+        #     sold_quant[s.product]= s.quantity_sold
+        #     stock_prod= Addproduct.query.filter_by(name=s.product).first()
+        #     current_stock[s.product]=stock_prod.stock
+        # print(current_stock)
+        # stop_timer(resp_time, "view_sold_products")
+        # return render_template('admin/sold_products.html', title='Sold Products', name= name, sold=sold_quant, current_stock= current_stock)#, product=soldproducts.product)
 
         
+        if(len(soldproducts) > 0):
+            for s in soldproducts:
+                print("soldproducts: ",s.name, 'product:', s.product, 'quantity sold:', s.quantity_sold, 'stock')#, s.stock)
+                sold= s.get_sold(sellername= s.name, prod= s.product)
+                sold_quant[s.product]= s.quantity_sold
+                stock_prod= Addproduct.query.filter_by(name=s.product).first()
+                current_stock[s.product]=stock_prod.stock
+            print(current_stock)
+            stop_timer(resp_time, "view_sold_products")
+            return render_template('admin/sold_products.html', title='Sold Products', name= name, sold=sold_quant, current_stock= current_stock, like=like, dislike=dislike)#, product=soldproducts.product)
+        else:
+            flash("You have sold products, sorry!", 'danger')
+            redirect(url_for('admin'))
+
+
 @app.route('/seller/logout')
 def seller_logout():
     resp_time= start_timer()

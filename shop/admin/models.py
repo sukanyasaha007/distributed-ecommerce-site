@@ -11,7 +11,7 @@ from flask_login import UserMixin
 #     password = db.Column(db.String(180),unique=False, nullable=False)
 #     profile = db.Column(db.String(180), unique=False, nullable=False,default='profile.jpg')
 #     # products = db.Column(db.String(180),unique=False, nullable=False)
-#
+
 #     def __repr__(self):
 #         return '<User %r>' % self.username
 
