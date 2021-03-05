@@ -49,6 +49,7 @@ login_manager.login_message = u"Please login first"
 
 #GRPC params
 # channel = grpc.secure_channel("grpc-server-vlhiisghja-uc.a.run.app:443", grpc.ssl_channel_credentials())
+soap_host = ""
 channel = grpc.insecure_channel("host.docker.internal:50051")
 grpc_client = BuyerActionsStub(channel)
 socketio = SocketIO(app)

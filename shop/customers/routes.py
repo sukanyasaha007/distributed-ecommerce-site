@@ -1,9 +1,10 @@
 from flask import render_template,session, redirect,url_for,flash, make_response
 from flask_login import login_required, current_user, logout_user, login_user
-from shop import app,db
+from shop import app,db, soap_host
 from .forms import CustomerRegisterForm, CustomerLoginFrom, RatingForm
 from .model import Register, CustomerOrder, Rating
 from shop.products.models import Addproduct, SoldProducts
+from shop.carts.carts import clearcart
 from shop import start_timer, stop_timer
 import random
 import secrets
@@ -48,17 +49,19 @@ def payment():
             soldproducts= SoldProducts.query.filter_by(product=product.name).first()
             soldproducts.update_stock(sellername=soldproducts.name, prod=product.name, quantity_sold=prod['quantity'])
             # prods[seller.name]= product.name
+            clearcart()
             db.session.commit()
+
             stop_timer(resp_time, "makePayment")
     return redirect(url_for('thanks'))
 
 
 def makeTransaction(order):
-    transport = zeep.Transport(cache=None)
-    # client = zeep.Client("host.docker.internal:8000/?WSDL", transport=transport)
-    st = time.time()
-    # result = client.service.slow_request()  # takes 1 sec
-    print("Time: %.2f" % (time.time() - st))
+    # resp_time = start_timer()
+    # transport = zeep.Transport(cache=None)
+    # client = zeep.Client(soap_host+"/?WSDL", transport=transport)
+    # result = client.service.slow_request()
+    # stop_timer(resp_time, "soapServer")
     return True
 
 @app.route('/thanks')

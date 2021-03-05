@@ -118,7 +118,7 @@ def deleteitem(id):
         for key, item in session['Shoppingcart'].items():
             if int(key) == id:
                 grpc_client.updateproductQuantity(UpdateproductQuantity(customer=current_user.id,
-                                                                        product=id, quantity=-99999))
+                                                                        product=str(id), quantity=-99999))
                 session['Shoppingcart'].pop(key, None)
                 stop_timer(resp_time, "deleteItem")
                 return redirect(url_for('getCart'))
