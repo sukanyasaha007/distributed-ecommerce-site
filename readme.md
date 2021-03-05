@@ -1,19 +1,19 @@
 # Code Base Structure
 ## Components
-    Client Side Buyer Interface
-    Client Side Seller Interface
-    Front end for Buyer
-    Front end For Seller
-    DataBase
+    1. Client Side Buyer Interface
+    2. Client Side Seller Interface
+    3. Front end for Buyer
+    4. Front end For Seller
+    5. DataBase
 ## Framework
-    Buyer side- Rest using Flask
-    Seller Side- REST using Flask
-    GRPC to interact with database
-    SOAp server for financial transaction
+    1. Buyer side- Rest using Flask
+    2. Seller Side- REST using Flask
+    3. GRPC to interact with database
+    4. SOAp server for financial transaction
 ## Run Locally
-    Start the flask server - run the run.py file
-    Start the GRPC Server- grpc_server/onlineshopping.py run this
-    Start the SOAP server- run soapServer/server.py
+    1. Start the flask server - run the run.py file
+    2. Start the GRPC Server- grpc_server/onlineshopping.py run this
+    3. Start the SOAP server- run soapServer/server.py
 
 # Deploy to GCP
     1. Create a two GCP instances for front end and back end
@@ -23,6 +23,6 @@
     5. Set up database in another instance and create database using database.sql schema
     6. Open first instance set up the env file and follow steps mentioned in Run loaclly part above
 # Refernce
-    Flask, GRPC documents
-    UI Design and integration is learned from tutorial of Jamal Bugti
+    1. Flask, GRPC documents
+    2. UI Design and integration is learned from tutorial of Jamal Bugti
     link: https://www.youtube.com/playlist?list=PLYPlvTh05MsxJja9bzQCSTDu4hnEv5N_u
