@@ -140,7 +140,11 @@ def sold_products():
                 sold= s.get_sold(sellername= s.name, prod= s.product)
                 sold_quant[s.product]= s.quantity_sold
                 stock_prod= Addproduct.query.filter_by(name=s.product).first()
-                current_stock[s.product]=stock_prod.stock
+                if stock_prod== None:
+                    flash("You have sold products, sorry!", 'danger')
+                    redirect(url_for('admin'))
+                else:
+                    current_stock[s.product]=stock_prod.stock
             print(current_stock)
             stop_timer(resp_time, "view_sold_products")
             return render_template('admin/sold_products.html', title='Sold Products', name= name, sold=sold_quant, current_stock= current_stock, like=like, dislike=dislike)#, product=soldproducts.product)
