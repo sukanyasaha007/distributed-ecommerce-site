@@ -5,7 +5,7 @@
     3. Front end for Buyer
     4. Front end For Seller
     5. DataBase
-    ![]("assignment 2 architechture.png")
+    ! [architechture] ("assignment 2 architechture.png")
 ## Framework
     1. Buyer side- Rest using Flask
     2. Seller Side- REST using Flask
