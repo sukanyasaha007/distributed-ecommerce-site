@@ -263,12 +263,16 @@ def updateproduct(id):
     stop_timer(resp_time, "updateProduct")
     return render_template('products/addproduct.html', form=form, title='Update Product',getproduct=product, brands=brands,categories=categories)
 
-
-@app.route('/deleteproduct/<int:id>', methods=['POST'])
+@app.route('/deleteproduct/<int:id>', methods=['GET','POST'])
 def deleteproduct(id):
+    print("I am here to delete")
+    # product = Addproduct.query.get_or_404(id)
     product = Addproduct.query.get_or_404(id)
+
+    print("I am here to delete")
     if request.method =="POST":
         try:
+            print("I am here to unlink")
             os.unlink(os.path.join(current_app.root_path, "static/images/" + product.image_1))
             os.unlink(os.path.join(current_app.root_path, "static/images/" + product.image_2))
             os.unlink(os.path.join(current_app.root_path, "static/images/" + product.image_3))
@@ -276,7 +280,11 @@ def deleteproduct(id):
             print(e)
         db.session.delete(product)
         db.session.commit()
+        # deleted_objects = addproduct.__table__.delete().where(addproduct.id.in_([id]))
+        # session.execute(deleted_objects)
+        # session.commit()
         flash(f'The product {product.name} was delete from your record','success')
         return redirect(url_for('admin'))
+
     flash(f'Can not delete the product','success')
     return redirect(url_for('admin'))
