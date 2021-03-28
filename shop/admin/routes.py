@@ -23,9 +23,16 @@ from ..grpc_server.seller_pb2 import SellerAddProductsRequest
 @app.route('/admin')
 def admin():
     resp_time= start_timer()
-    products = Addproduct.query.all()
-    stop_timer(resp_time, "seller_landing_page_loading")
-    return render_template('admin/index.html', title='Admin page',products=products)
+    if current_user.is_authenticated:
+        name= current_user.name
+    # name= current_user.name
+        products= Addproduct.query.filter_by(seller= name).all()
+    # print(name, products)
+    # products = Addproduct.query.all()
+        stop_timer(resp_time, "seller_landing_page_loading")
+        return render_template('admin/index.html', title='Admin page',products=products)
+    else:
+        return redirect(url_for("admin_login"))
 
 @app.route('/admin/brands')
 def brands():
