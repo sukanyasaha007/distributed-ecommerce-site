@@ -57,12 +57,12 @@ def payment():
 
 
 def makeTransaction(order):
-    # resp_time = start_timer()
-    # transport = zeep.Transport(cache=None)
-    # client = zeep.Client(soap_host+"/?WSDL", transport=transport)
-    # result = client.service.slow_request()
-    # stop_timer(resp_time, "soapServer")
-    return True
+    resp_time = start_timer()
+    transport = zeep.Transport(cache=None)
+    client = zeep.Client(soap_host, transport=transport)
+    result = client.service.slow_request()
+    stop_timer(resp_time, "soapServer")
+    return result
 
 @app.route('/thanks')
 def thanks():

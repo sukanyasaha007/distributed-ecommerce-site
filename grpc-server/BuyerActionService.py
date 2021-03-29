@@ -1,10 +1,8 @@
 import decimal
-
+import socket
 import onlineshopping_pb2_grpc
-from mapper.object_mapper import ObjectMapper
 from datetime import datetime
 import random
-from bson import json_util
 from onlineshopping_pb2 import (
     AccountCreationResponse, AccountCreationRequest, SearchProductResponse, ProductDetails,
     AddToCartResponse, SearchProductRequestByDesc
@@ -16,6 +14,10 @@ from google.protobuf.json_format import Parse
 Base.metadata.create_all(engine)
 session = DBSession()
 
+UDP_IP = "127.0.0.1"
+UPD_PORTS = [5010, 5001, 5002, 5003, 5004]
+
+sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)  # UDP
 
 class DecimalEncoder(json.JSONEncoder):
     def default(self, o):
@@ -32,16 +34,26 @@ class BuyerActionService(onlineshopping_pb2_grpc.BuyerActionsServicer):
         try:
             print("hi")
             print(request)
-            record = Register(id=request.buyer_id,
-                              name=request.buyer_name,
-                              username=request.buyer_username,email=request.buyer_email,
-                              password=request.buyer_password,country=request.buyer_country,
-                              city=request.buyer_city,contact=request.buyer_contact,
-                              address=request.buyer_address,zipcode=request.buyer_zipcode,
-                              profile='profile.jpg',date_created=datetime.now(),
-                              itemspurchased=request.items_purchased)
-            session.add(record)
-            session.commit()
+            request = {"buyer_id": request.buyer_id,
+                       "buyer_name": request.buyer_name,
+                       "buyer_username": request.buyer_username,
+                       "buyer_password": request.buyer_password,
+                       "buyer_email": request.buyer_email,
+                       "buyer_country": request.buyer_country,
+                       "buyer_city": request.buyer_city,
+                       "buyer_contact": request.buyer_contact,
+                       "buyer_address": request.buyer_address,
+                       "buyer_zipcode": request.buyer_zipcode,
+                       "items_purchased": request.items_purchased,
+                       "type": "client"
+                       }
+
+            for port in UPD_PORTS:
+                print("UDP target IP: %s" % UDP_IP)
+                print("UDP target port: %s" % port)
+                print("message: %s" % request)
+                sock.sendto(json.dumps(request).encode(), (UDP_IP, port))
+
         except Exception as e:
             print("Exception")
             print(e)
