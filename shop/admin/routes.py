@@ -24,25 +24,33 @@ from ..grpc_server.seller_pb2 import SellerAddProductsRequest
 
 import jwt
 
-def token_required(fn):
+def auth_required(fn):
     def decorated():
         print(request.cookies)
         authToken = request.cookies.get("authToken")
         authData = {
             "isAuthenticated": False,
-            "userName": None
+            "userName": None,
+
         }
 
         if authToken:
-            jwtData = jwt.decode(authToken, app.config["JWT_SECRET_KEY"], verify=True)
-            print(jwtData)
+            try:
+                jwtData = jwt.decode(jwt=authToken, key=app.config["JWT_SECRET_KEY"], verify=True, algorithms="HS256")
+                print(jwtData)
+                authData["isAuthenticated"] = True
+                authData["userName"] = jwtData.user_name
+
+            except:
+                print("jwt varification failed")
         else:
             print("No token found")
         return fn(authData)
+    decorated.__name__ = fn.__name__
     return decorated
 
 @app.route('/admin')
-@token_required
+@auth_required
 def admin(authData):
     resp_time= start_timer()
     if authData["isAuthenticated"]:
@@ -77,7 +85,7 @@ def admin_login():
                                 city=user.buyer_city, contact=user.buyer_contact, address=user.buyer_address,
                                 zipcode=user.buyer_zipcode, itemspurchased=user.items_purchased)
             stop_timer(resp_time, "admin_login")
-            token = jwt.encode({"userId": user.buyer_username, "user_type": "seller"}, app.config["JWT_SECRET_KEY"], algorithm="HS256")
+            token = jwt.encode({"user_name": user.buyer_username, "user_type": "seller"}, app.config["JWT_SECRET_KEY"], algorithm="HS256")
             session["logged_in"]=True
             # if user.is_active == "true":
             #     login_user(newUser)
@@ -141,10 +149,11 @@ def admin_register():
 
 
 @app.route('/seller/productslist', methods=['GET','POST'])
-def seller_products():
+@auth_required
+def seller_products(authData):
     resp_time= start_timer()
-    if current_user.is_authenticated:
-        name= current_user.name
+    if authData["isAuthenticated"]:
+        name= authData["userName"]
         products= SellerProducts.query.filter_by(name= name).all()
         # products_= SellerProducts.query.filter_by(name= name).getprod()
         print('products', products)
@@ -167,11 +176,12 @@ def getRatingCount(name):
         return 0, 0
 
 @app.route('/seller/soldproducts', methods=['GET','POST'])
-def sold_products():
+@auth_required
+def sold_products(authData):
     resp_time= start_timer()
     print(current_user)
-    if current_user.is_authenticated:
-        name= current_user.name
+    if authData["isAuthenticated"]:
+        name= authData["userName"]
         soldproducts= SoldProducts.query.filter_by(name= name).all()
         like, dislike = getRatingCount(name)
         sold_quant={}
@@ -196,7 +206,10 @@ def sold_products():
 
 
 @app.route('/seller/logout')
+@auth_required
 def seller_logout():
+    if authData["isAuthenticated"]:
+        name= authData["userName"]
     resp_time= start_timer()
     logout_user()
     session.clear()
