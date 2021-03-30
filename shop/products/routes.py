@@ -12,6 +12,7 @@ from shop import grpc_client
 from ..customers.model import Register, Rating
 from shop.grpc_server.onlineshopping_pb2 import SearchProductRequestByDesc, SearchProductResponse, GetCartRequest
 
+from ..admin.routes import auth_required
 
 def brands():
     brands = Brand.query.join(Addproduct, (Brand.id == Addproduct.brand_id)).all()
@@ -167,10 +168,12 @@ def deletecat(id):
 
 
 @app.route('/addproduct', methods=['GET','POST'])
-def addproduct():
+@auth_required
+def addproduct(authData):
     resp_time = start_timer()
-    if not session:
-        return "please login first"
+    if not authData["isAuthenticated"]:
+        print("user not logged in")
+        return redirect(url_for("admin"))
     form = Addproducts(request.form)
     brands = Brand.query.all()
     categories = Category.query.all()
@@ -180,7 +183,7 @@ def addproduct():
         if Addproduct.query.filter_by(name= name).first():
             flash(f'The product {name} product exists already. please add some other product', 'success')
             return redirect(url_for('admin'))
-        seller= current_user.name
+        seller= authData["userName"]
         price = form.price.data
         discount = form.discount.data
         stock = form.stock.data
@@ -198,8 +201,8 @@ def addproduct():
         db.session.commit()
 
         
-        if current_user.is_authenticated:
-            sellername= current_user.name
+        if authData["isAuthenticated"]:
+            sellername= authData["userName"]
             soldproducts = SoldProducts(id=id, name=sellername, email=current_user.email, product=name, quantity_sold=0, stock=stock)
             print(soldproducts)
             db.session.add(soldproducts)

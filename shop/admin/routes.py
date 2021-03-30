@@ -12,7 +12,7 @@ from shop import start_timer, stop_timer
 from shop.products.models import Addproduct,Category,Brand
 import zeep
 import time
-from flask_login import current_user, logout_user, login_user, login_required
+# from flask_login import current_user, logout_user, login_user, login_required
 from google.protobuf.json_format import MessageToJson
 
 from ..customers.forms import CustomerRegisterForm, CustomerLoginFrom
@@ -39,10 +39,10 @@ def auth_required(fn):
                 jwtData = jwt.decode(jwt=authToken, key=app.config["JWT_SECRET_KEY"], verify=True, algorithms="HS256")
                 print(jwtData)
                 authData["isAuthenticated"] = True
-                authData["userName"] = jwtData.user_name
+                authData["userName"] = jwtData["user_name"]
 
-            except:
-                print("jwt varification failed")
+            except Exception as e:
+                print("jwt varification failed: ", e)
         else:
             print("No token found")
         return fn(authData)
@@ -55,7 +55,6 @@ def admin(authData):
     resp_time= start_timer()
     if authData["isAuthenticated"]:
         name= authData["userName"]
-    # name= current_user.name
         products= Addproduct.query.filter_by(seller= name).all()
     # print(name, products)
     # products = Addproduct.query.all()
@@ -179,7 +178,6 @@ def getRatingCount(name):
 @auth_required
 def sold_products(authData):
     resp_time= start_timer()
-    print(current_user)
     if authData["isAuthenticated"]:
         name= authData["userName"]
         soldproducts= SoldProducts.query.filter_by(name= name).all()
@@ -205,13 +203,11 @@ def sold_products(authData):
             redirect(url_for('admin'))
 
 
-@app.route('/seller/logout')
+@app.route('/seller/logout', methods=['DELETE'])
 @auth_required
-def seller_logout():
+def seller_logout(authData):
     if authData["isAuthenticated"]:
-        name= authData["userName"]
-    resp_time= start_timer()
-    logout_user()
-    session.clear()
-    stop_timer(resp_time, "seller_logout")
-    return redirect(url_for('admin'))
+        resp = make_response()
+        resp.set_cookie("authToken", expires=0)
+        return resp;
+    return jsonify({'message': "User not logged in"}), 400

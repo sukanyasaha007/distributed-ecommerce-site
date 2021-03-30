@@ -16,9 +16,27 @@ $("#login-form").submit(function(event) {
         contentType: "application/json; charset=utf-8",
         success: function() {
             console.log("Successful login");
+            window.location.href = "/admin";
         },
         error: function() {
-            console.log("Unsuccessful login");
+            alert("Unsuccessful login");
+        }
+    })
+});
+
+$("#logout-cta").click(function(event) {
+    event.preventDefault();
+
+    $.ajax({
+        url: "/seller/logout",
+        type: "delete",
+        contentType: "application/json; charset=utf-8",
+        success: function() {
+            console.log("Successful logout");
+            window.location.href = "/admin/login";
+        },
+        error: function() {
+            alert("Unsuccessful logout");
         }
     })
 });
