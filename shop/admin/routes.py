@@ -23,31 +23,30 @@ from ..grpc_server.onlineshopping_pb2 import AccountCreationRequest, AccountLogi
 from ..grpc_server.seller_pb2 import SellerAddProductsRequest
 
 import jwt
-from functools import wraps
 
-def token_required(f):
-    @wraps(f)
-    def decorated(*args, **kwargs):
-        token = request.args.get('token') #http://127.0.0.1:5000/route?token=alshfjfjdklsfj89549834ur
+def token_required(fn):
+    def decorated():
+        print(request.cookies)
+        authToken = request.cookies.get("authToken")
+        authData = {
+            "isAuthenticated": False,
+            "userName": None
+        }
 
-        if not token:
-            return jsonify({'message' : 'Token is missing!'}), 403
-
-        try: 
-            data = jwt.decode(token, app.config['JWT_SECRET_KEY'])
-            print( "/n data is :/n",data)
-        except:
-            return jsonify({'message' : 'Token is invalid!'}), 403
-
-        return f(*args, **kwargs)
-
+        if authToken:
+            jwtData = jwt.decode(authToken, app.config["JWT_SECRET_KEY"], verify=True)
+            print(jwtData)
+        else:
+            print("No token found")
+        return fn(authData)
     return decorated
-# @token_required
+
 @app.route('/admin')
-def admin():
+@token_required
+def admin(authData):
     resp_time= start_timer()
-    if current_user.is_authenticated:
-        name= current_user.name
+    if authData["isAuthenticated"]:
+        name= authData["userName"]
     # name= current_user.name
         products= Addproduct.query.filter_by(seller= name).all()
     # print(name, products)
@@ -55,7 +54,46 @@ def admin():
         stop_timer(resp_time, "seller_landing_page_loading")
         return render_template('admin/index.html', title='Admin page',products=products)
     else:
-        return redirect(url_for("admin_login"))
+        return redirect(url_for("admin_login_page"))
+
+@app.route('/admin/login', methods=['GET'])
+def admin_login_page():
+    return render_template('admin/login.html',title='Login page')
+
+@app.route('/admin/login', methods=['POST'])
+def admin_login():
+    resp_time= start_timer()
+    try:
+        if len(request.json["email"]) and len(request.json["password"]):
+            resp_time = start_timer()
+            input_request = AccountLoginRequest(buyer_username=request.json["email"], buyer_password=request.json["password"])
+            # user = Register.query.filter_by(email=form.email.data).first()
+            user = grpc_client.login(input_request)
+            if user.buyer_username == '' or user== None:
+                print("Invalid userid or password")
+                return jsonify({'message': "Invalid userid or password"}), 401
+            newUser = Register(id=user.buyer_id, name=user.buyer_name, username=user.buyer_username,
+                                email=user.buyer_email, password=user.buyer_password, country=user.buyer_country,
+                                city=user.buyer_city, contact=user.buyer_contact, address=user.buyer_address,
+                                zipcode=user.buyer_zipcode, itemspurchased=user.items_purchased)
+            stop_timer(resp_time, "admin_login")
+            token = jwt.encode({"userId": user.buyer_username, "user_type": "seller"}, app.config["JWT_SECRET_KEY"], algorithm="HS256")
+            session["logged_in"]=True
+            # if user.is_active == "true":
+            #     login_user(newUser)
+            #     flash('You are logged in now!', 'success')
+            #     stop_timer(resp_time, "adminLogin")
+            resp = make_response(MessageToJson(user))
+            resp.set_cookie("authToken", token, httponly=True, samesite="Lax")
+            # return resp
+            return resp;
+            # return jsonify({'token' : token.decode('UTF-8')})
+        else:
+            flash('Incorrect email and password', 'danger')
+            return jsonify({'test': 123}), 401
+    except Exception as e:
+        print(e)
+        return jsonify({"message": "Something went wrong"}), 500
 
 @app.route('/admin/brands')
 def brands():
@@ -101,45 +139,6 @@ def admin_register():
 
     return render_template('customer/register.html', form=form)
 
-
-@app.route('/admin/login', methods=['GET'])
-def admin_login_page():
-    return render_template('admin/login.html',title='Login page')
-
-@app.route('/admin/login', methods=['POST'])
-def admin_login():
-    resp_time= start_timer()
-    try:
-        if len(request.json["email"]) and len(request.json["password"]):
-            resp_time = start_timer()
-            input_request = AccountLoginRequest(buyer_username=request.json["email"], buyer_password=request.json["password"])
-            # user = Register.query.filter_by(email=form.email.data).first()
-            user = grpc_client.login(input_request)
-            if user.buyer_username == '':
-                return jsonify({'message': "Invalid userid or password"}), 401
-            newUser = Register(id=user.buyer_id, name=user.buyer_name, username=user.buyer_username,
-                                email=user.buyer_email, password=user.buyer_password, country=user.buyer_country,
-                                city=user.buyer_city, contact=user.buyer_contact, address=user.buyer_address,
-                                zipcode=user.buyer_zipcode, itemspurchased=user.items_purchased)
-            stop_timer(resp_time, "admin_login")
-            token = jwt.encode({"userId": user.buyer_username, "user_type": "seller"}, app.config["JWT_SECRET_KEY"], algorithm="HS256")
-            session["logged_in"]=True
-            # if user.is_active == "true":
-            #     login_user(newUser)
-            #     flash('You are logged in now!', 'success')
-            #     stop_timer(resp_time, "adminLogin")
-            resp = make_response(MessageToJson(user))
-            resp.set_cookie("token", token, httponly=True, samesite="Lax")
-            print(resp)
-            # return resp
-            return resp;
-            # return jsonify({'token' : token.decode('UTF-8')})
-        else:
-            flash('Incorrect email and password', 'danger')
-            return jsonify({'test': 123}), 401
-    except Exception as e:
-        print(e)
-        return jsonify({"message": "Something went wrong"}), 500
 
 @app.route('/seller/productslist', methods=['GET','POST'])
 def seller_products():
