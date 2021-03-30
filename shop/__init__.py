@@ -17,6 +17,9 @@ from shop.grpc_server.onlineshopping_pb2_grpc import BuyerActionsStub
 
 from shop.grpc_server.seller_pb2_grpc import SellerStub
 
+# jwt
+from flask_restful import Api
+from flask_jwt_extended import JWTManager
 basedir = os.path.abspath(os.path.dirname(__file__))
 app = Flask(__name__)
 # app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:@localhost/onlineshopping'
@@ -86,3 +89,15 @@ from shop.carts import carts
 from shop.customers import routes
 
 from flask import request
+
+# app.config['BASE_URL'] = 'http://0.0.0.0:5000'  #Running on localhost
+app.config['JWT_SECRET_KEY'] = 'onlineshopping'  # Change this!
+app.config['JWT_TOKEN_LOCATION'] = ['cookies']
+app.config['JWT_COOKIE_CSRF_PROTECT'] = True
+app.config['JWT_CSRF_CHECK_FORM'] = True
+
+app.config['SESSION_COOKIE_HTTPONLY']=True
+app.config['REMEMBER_COOKIE_HTTPONLY']=True
+app.config['BASE_URL']= "http://127.0.0.1:5000"
+jwt = JWTManager(app)
+
