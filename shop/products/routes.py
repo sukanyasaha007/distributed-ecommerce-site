@@ -139,8 +139,9 @@ def addcat():
 
 
 @app.route('/updatecat/<int:id>',methods=['GET','POST'])
-def updatecat(id):
-    if 'email' not in session:
+@auth_required
+def updatecat(authData, id):
+    if not authData["isAuthenticated"]:
         flash('Login first please','danger')
         return redirect(url_for('login'))
     updatecat = Category.query.get_or_404(id)
@@ -173,6 +174,7 @@ def addproduct(authData):
     resp_time = start_timer()
     if not authData["isAuthenticated"]:
         print("user not logged in")
+        flash('Login first please','danger')
         return redirect(url_for("admin"))
     form = Addproducts(request.form)
     brands = Brand.query.all()
