@@ -25,8 +25,8 @@ from ..grpc_server.seller_pb2 import SellerAddProductsRequest
 import jwt
 
 def auth_required(fn):
-    def decorated():
-        print(request.cookies)
+    def decorated(**kwargs):
+        print("Inside Auth Required")
         authToken = request.cookies.get("authToken")
         authData = {
             "isAuthenticated": False,
@@ -37,7 +37,7 @@ def auth_required(fn):
         if authToken:
             try:
                 jwtData = jwt.decode(jwt=authToken, key=app.config["JWT_SECRET_KEY"], verify=True, algorithms="HS256")
-                print(jwtData)
+                # print(jwtData)
                 authData["isAuthenticated"] = True
                 authData["userName"] = jwtData["user_name"]
 
@@ -45,7 +45,7 @@ def auth_required(fn):
                 print("jwt varification failed: ", e)
         else:
             print("No token found")
-        return fn(authData)
+        return fn(authData, **kwargs)
     decorated.__name__ = fn.__name__
     return decorated
 
@@ -55,7 +55,8 @@ def admin(authData):
     resp_time= start_timer()
     if authData["isAuthenticated"]:
         name= authData["userName"]
-        products= Addproduct.query.filter_by(seller= name).all()
+        seller_data= Register.query.filter_by(username= name).first()
+        products= Addproduct.query.filter_by(seller= seller_data.name).all()
     # print(name, products)
     # products = Addproduct.query.all()
         stop_timer(resp_time, "seller_landing_page_loading")

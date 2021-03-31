@@ -5,7 +5,7 @@ from .models import SoldProducts
 from .forms import Addproducts
 import secrets
 import os
-from flask_login import current_user
+# from flask_login import current_user
 import random
 import grpc
 from shop import grpc_client
@@ -183,6 +183,7 @@ def addproduct(authData):
         if Addproduct.query.filter_by(name= name).first():
             flash(f'The product {name} product exists already. please add some other product', 'success')
             return redirect(url_for('admin'))
+        seller_data= Register.query.filter_by(username= authData["userName"]).first()
         seller= authData["userName"]
         price = form.price.data
         discount = form.discount.data
@@ -202,9 +203,11 @@ def addproduct(authData):
 
         
         if authData["isAuthenticated"]:
-            sellername= authData["userName"]
-            soldproducts = SoldProducts(id=id, name=sellername, email=current_user.email, product=name, quantity_sold=0, stock=stock)
-            print(soldproducts)
+            seller_user_name= authData["userName"]
+            seller_data= Register.query.filter_by(username= seller_user_name).first()
+            # print(seller_data.name)
+            soldproducts = SoldProducts(id=id, name=seller_data.name, email=seller_data.email, product=name, quantity_sold=0, stock=stock)
+            # print(soldproducts)
             db.session.add(soldproducts)
             db.session.commit()
         flash(f'The product {name} was added in database','success')
@@ -213,11 +216,17 @@ def addproduct(authData):
     return render_template('products/addproduct.html', form=form, title='Add a Product', brands=brands,categories=categories)
 
 
-@app.route('/updateproduct/<int:id>', methods=['GET','POST'])
-def updateproduct(id):
+
+@app.route('/updateproduct/<int:id>/', methods=['GET','POST'])
+@auth_required
+def updateproduct(authData, id):
     resp_time = start_timer()
-    if not session:
-        return "please login first"
+    print("Inside update product")
+    print(authData, '/n', id)
+    if not authData["isAuthenticated"]:
+        print("user not logged in")
+        flash("Please login first")
+        return redirect(url_for("admin"))
     form = Addproducts(request.form)
     product = Addproduct.query.get_or_404(id)
     brands = Brand.query.all()
@@ -226,7 +235,9 @@ def updateproduct(id):
     category = request.form.get('category')
     if request.method =="POST":
         product.name = form.name.data
-        product.seller= current_user.seller
+        seller_data= Register.query.filter_by(username= authData["userName"]).first()
+        print(seller_data.name)
+        product.seller= seller_data.name
         product.price = form.price.data
         product.discount = form.discount.data
         product.stock = form.stock.data
@@ -255,10 +266,11 @@ def updateproduct(id):
 
         flash('The product was updated','success')
         db.session.commit()
-        if current_user.is_authenticated:
-            sellername= current_user.name
-            if not SoldProducts.query.filter_by(name=sellername):
-                soldproducts = SoldProducts(name=sellername, email=current_user.email, product=product.name, quantity_sold=0)
+        if authData["isAuthenticated"]:
+            seller_user_name= authData["userName"]
+            seller_name= Register.query.filter_by(username= seller_user_name).first()
+            if not SoldProducts.query.filter_by(name=seller_name.name):
+                soldproducts = SoldProducts(name=seller_name, email=seller_name.email, product=product.name, quantity_sold=0)
                 print(soldproducts)
                 db.session.add(soldproducts)
                 db.session.commit()
