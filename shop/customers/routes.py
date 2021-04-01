@@ -17,12 +17,40 @@ from shop.grpc_server.onlineshopping_pb2 import AccountCreationRequest, AccountL
 
 from flask import request
 from shop import grpc_client
+import jwt
 
 buplishable_key ='pk_test_51IN5nDCVZ5Yf06wRG9BLSKuBUaUqXKWKxbQPjAtHcsYdZgY0NiTG0aXIf25Ll29ItyhvnxjBa1FSUJPCo107MmCD00nkqBkcID'
 stripe.api_key ='sk_test_51IN5nDCVZ5Yf06wROWN3sRW7aVEhhCfo3obH4jNrU1MuzrOVeLS03hIwbs3UHOcL0v356Z01J1eP8rpcOZT6tQjF00HLVt218C'
 
+def auth_required_buyer(fn):
+    def decorated(**kwargs):
+        print("Inside Auth Required")
+        authToken = request.cookies.get("authToken")
+        authData = {
+            "isAuthenticated": False,
+            "userName": None,
+
+        }
+
+        if authToken:
+            try:
+                jwtData = jwt.decode(jwt=authToken, key=app.config["JWT_SECRET_KEY"], verify=True, algorithms="HS256")
+                # print(jwtData)
+                authData["isAuthenticated"] = True
+                authData["userName"] = jwtData["user_name"]
+
+            except Exception as e:
+                print("jwt varification failed: ", e)
+        else:
+            print("No token found")
+        return fn(authData, **kwargs)
+    decorated.__name__ = fn.__name__
+    return decorated
+    
+
 @app.route('/payment',methods=['POST'])
-def payment():
+@auth_required_buyer
+def payment(authData):
     resp_time = start_timer()
     invoice = request.form.get('invoice')
     amount = request.form.get('amount')
