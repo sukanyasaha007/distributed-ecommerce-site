@@ -3,6 +3,8 @@ from flask_socketio import SocketIO
 from flask import Flask, session
 from flask_sqlalchemy import SQLAlchemy
 from flask_bcrypt import Bcrypt
+from werkzeug.utils import secure_filename
+from werkzeug.datastructures import  FileStorage
 from flask_uploads import UploadSet
 from flask_uploads import configure_uploads
 from flask_uploads import IMAGES, patch_request_class
