@@ -27,9 +27,9 @@ from flask_jwt_extended import JWTManager
 basedir = os.path.abspath(os.path.dirname(__file__))
 app = Flask(__name__)
 # app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:@localhost/onlineshopping'
-app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get("MYSQL_CONNECTION_STRING")
+# app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get("MYSQL_CONNECTION_STRING")
 
-
+app.config['SQLALCHEMY_DATABASE_URI'] ="mysql+pymysql://remoteApplication:abc%40123@34.66.248.100/onlineshopping"
 
 # app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:my-secret-pw@host.docker.internal:3306/onlineshopping'
 app.config['SECRET_KEY']='djshakuo'
