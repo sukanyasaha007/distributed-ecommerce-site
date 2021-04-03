@@ -37,6 +37,7 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 app.config['UPLOADED_PHOTOS_DEST'] = os.path.join(basedir, 'static/images')
 photos = UploadSet('photos', IMAGES)
+# UploadSet('photos', default_dest=IMAGES app: app.instance_root)
 configure_uploads(app, photos)
 patch_request_class(app)
 
