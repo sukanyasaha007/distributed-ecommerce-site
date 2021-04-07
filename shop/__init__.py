@@ -27,7 +27,9 @@ from flask_restful import Api
 basedir = os.path.abspath(os.path.dirname(__file__))
 app = Flask(__name__)
 # app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:@localhost/onlineshopping'
-app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get("MYSQL_CONNECTION_STRING")
+
+app.config['SQLALCHEMY_DATABASE_URI']= 'cockroachdb://admin:abc%40123@35.209.30.130:25262/onlineshopping?sslmode=disable'
+# app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get("MYSQL_CONNECTION_STRING")
 
 
 
