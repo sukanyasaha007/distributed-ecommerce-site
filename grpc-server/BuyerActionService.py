@@ -29,7 +29,8 @@ class BuyerActionService(onlineshopping_pb2_grpc.BuyerActionsServicer):
     def health_check(self):
         UNHEALTHY_UPD_PORTS.clear()
         request_atomic = {
-            "type": "health"
+            "type": "health",
+            "ip" : UDP_IP
         }
         active_servers = 0
         for port in UPD_PORTS:
@@ -77,7 +78,8 @@ class BuyerActionService(onlineshopping_pb2_grpc.BuyerActionsServicer):
                        "items_purchased": request.items_purchased,
                        "type": "client",
                        "function": "createAccount",
-                       "procs_active": self.procs_active
+                       "procs_active": self.procs_active,
+                       "ip": UDP_IP
                        }
             self.sendToAtomicBroadcastServer(request)
 
@@ -97,7 +99,8 @@ class BuyerActionService(onlineshopping_pb2_grpc.BuyerActionsServicer):
                         "buyer_password" : request.buyer_password,
                         "type": "client",
                         "function": "login",
-                        "procs_active": self.procs_active
+                        "procs_active": self.procs_active,
+                        "ip": UDP_IP
             }
             self.sendToAtomicBroadcastServer(request_atomic)
             active_servers = 0
