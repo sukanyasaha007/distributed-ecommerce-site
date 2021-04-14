@@ -61,23 +61,31 @@ def AddCart():
 def getCart():
     resp_time = start_timer()
     existing = grpc_client.getFromcart(GetCartRequest(customerId=str(current_user.id)))
+    print("cart contents -> ", existing)
     prd = {}
+    subtotal = 0
+    grandtotal = 0
     if len(existing.products) != 0:
         for i in existing.products:
             prd[i.id] = {'color': i.colors, 'colors': i.colors,
                          'discount': i.discount, 'image': i.image_1, 'name': i.name,
                  'price': float(i.price), 'quantity': i.stock}
+            discount = (i.discount / 100) * float(float(i.price))
+            subtotal += float(i.price) * int(i.stock)
+            subtotal -= discount
+            tax = ("%.2f" % (.06 * float(subtotal)))
+            grandtotal = float("%.2f" % (1.06 * subtotal))
         session['Shoppingcart'] = prd
-    if 'Shoppingcart' not in session or len(session['Shoppingcart']) <= 0:
+    else:
         return redirect(url_for('home'))
-    subtotal = 0
-    grandtotal = 0
-    for key, product in session['Shoppingcart'].items():
-        discount = (product['discount'] / 100) * float(product['price'])
-        subtotal += float(product['price']) * int(product['quantity'])
-        subtotal -= discount
-        tax = ("%.2f" % (.06 * float(subtotal)))
-        grandtotal = float("%.2f" % (1.06 * subtotal))
+    # if 'Shoppingcart' not in session or len(session['Shoppingcart']) <= 0:
+    #     return redirect(url_for('home'))
+    # for key, product in session['Shoppingcart'].items():
+    #     discount = (product['discount'] / 100) * float(product['price'])
+    #     subtotal += float(product['price']) * int(product['quantity'])
+    #     subtotal -= discount
+    #     tax = ("%.2f" % (.06 * float(subtotal)))
+    #     grandtotal = float("%.2f" % (1.06 * subtotal))
     stop_timer(resp_time, "getcart")
     return render_template('products/carts.html', tax=tax, grandtotal=grandtotal, brands=brands(),
                            categories=categories())
@@ -95,12 +103,19 @@ def updatecart(code):
             session.modified = True
             for key, item in session['Shoppingcart'].items():
                 if int(key) == code:
-                    grpc_client.updateproductQuantity(UpdateproductQuantity(customer=current_user.id,
-                                                                            product=str(key),
-                                                                            quantity=int(quantity)))
-                    item['quantity'] = quantity
-                    item['color'] = color
-                    flash('Item is updated!')
+                    detail = SearchProductRequest(product=str(key))
+                    response = grpc_client.search(detail)
+                    product = response.products
+                    print(product, quantity)
+                    if(int(product[0].stock) > int(quantity)):
+                        grpc_client.updateproductQuantity(UpdateproductQuantity(customer=current_user.id,
+                                                                                product=str(key),
+                                                                                quantity=int(quantity)))
+                        item['quantity'] = quantity
+                        item['color'] = color
+                        flash('Item is updated!')
+                    else:
+                        flash('Requested quantity not present in stock','danger')
                     stop_timer(resp_time, "updatedCart")
                     return redirect(url_for('getCart'))
         except Exception as e:

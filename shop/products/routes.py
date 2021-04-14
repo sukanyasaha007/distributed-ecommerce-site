@@ -289,7 +289,6 @@ def updateproduct(authData, id):
     stop_timer(resp_time, "updateProduct")
     return render_template('products/addproduct.html', form=form, title='Update Product',getproduct=product, brands=brands,categories=categories)
 
-
 @app.route('/deleteproduct/<int:id>', methods=['GET','POST'])
 def deleteproduct(id):
     print("I am here to delete")
