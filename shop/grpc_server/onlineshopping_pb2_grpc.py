@@ -2,7 +2,7 @@
 """Client and server classes corresponding to protobuf-defined services."""
 import grpc
 
-import shop.grpc_server.onlineshopping_pb2 as onlineshopping__pb2
+import  shop.grpc_server.onlineshopping_pb2 as onlineshopping__pb2
 
 
 class BuyerActionsStub(object):

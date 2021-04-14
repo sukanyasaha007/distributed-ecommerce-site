@@ -11,6 +11,7 @@ _PORT = 50051
 
 def serve():
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
+    print("I m in serve")
     onlineshopping_pb2_grpc.add_BuyerActionsServicer_to_server(
         BuyerActionService(), server
     )

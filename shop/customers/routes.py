@@ -1,4 +1,4 @@
-from flask import render_template,session, redirect,url_for,flash, make_response
+from flask import render_template,session, redirect,url_for,flash, make_response, jsonify
 from flask_login import login_required, current_user, logout_user, login_user
 from shop import app,db, soap_host
 from .forms import CustomerRegisterForm, CustomerLoginFrom, RatingForm
@@ -12,17 +12,46 @@ import pdfkit
 import stripe
 import zeep
 import time
+from google.protobuf.json_format import MessageToJson
 
 from shop.grpc_server.onlineshopping_pb2 import AccountCreationRequest, AccountLoginRequest
 
 from flask import request
 from shop import grpc_client
+import jwt
 
 buplishable_key ='pk_test_51IN5nDCVZ5Yf06wRG9BLSKuBUaUqXKWKxbQPjAtHcsYdZgY0NiTG0aXIf25Ll29ItyhvnxjBa1FSUJPCo107MmCD00nkqBkcID'
 stripe.api_key ='sk_test_51IN5nDCVZ5Yf06wROWN3sRW7aVEhhCfo3obH4jNrU1MuzrOVeLS03hIwbs3UHOcL0v356Z01J1eP8rpcOZT6tQjF00HLVt218C'
 
+def auth_required_buyer(fn):
+    def decorated(**kwargs):
+        print("Inside Auth Required")
+        authToken = request.cookies.get("authToken")
+        authData = {
+            "isAuthenticated": False,
+            "userName": None,
+
+        }
+
+        if authToken:
+            try:
+                jwtData = jwt.decode(jwt=authToken, key=app.config["JWT_SECRET_KEY"], verify=True, algorithms="HS256")
+                # print(jwtData)
+                authData["isAuthenticated"] = True
+                authData["userName"] = jwtData["user_name"]
+
+            except Exception as e:
+                print("jwt varification failed: ", e)
+        else:
+            print("No token found")
+        return fn(authData, **kwargs)
+    decorated.__name__ = fn.__name__
+    return decorated
+    
+
 @app.route('/payment',methods=['POST'])
-def payment():
+@auth_required_buyer
+def payment(authData):
     resp_time = start_timer()
     invoice = request.form.get('invoice')
     amount = request.form.get('amount')
@@ -57,12 +86,12 @@ def payment():
 
 
 def makeTransaction(order):
-    resp_time = start_timer()
-    transport = zeep.Transport(cache=None)
-    client = zeep.Client(soap_host, transport=transport)
-    result = client.service.slow_request()
-    stop_timer(resp_time, "soapServer")
-    return result
+    # resp_time = start_timer()
+    # transport = zeep.Transport(cache=None)
+    # client = zeep.Client(soap_host+"/?WSDL", transport=transport)
+    # result = client.service.slow_request()
+    # stop_timer(resp_time, "soapServer")
+    return True
 
 @app.route('/thanks')
 def thanks():
@@ -115,7 +144,7 @@ def customer_register():
     return render_template('customer/register.html', form=form)
 
 
-@app.route('/customer/login', methods=['GET','POST'])
+@app.route('/customer/login', methods=['POST'])
 def customerLogin():
     resp_time = start_timer()
     form = CustomerLoginFrom()
@@ -124,19 +153,33 @@ def customerLogin():
             input_request = AccountLoginRequest(buyer_username=form.email.data, buyer_password=form.password.data)
             # user = Register.query.filter_by(email=form.email.data).first()
             user = grpc_client.login(input_request)
+            if user.buyer_username == '' or user== None:
+                print("Invalid userid or password")
+                return jsonify({'message': "Invalid userid or password"}), 401
+            
             newUser = Register(id=user.buyer_id, name=user.buyer_name, username=user.buyer_username,
                                 email=user.buyer_email, password=user.buyer_password, country=user.buyer_country,
                                 city=user.buyer_city, contact=user.buyer_contact, address=user.buyer_address,
                                 zipcode=user.buyer_zipcode, itemspurchased=user.items_purchased)
             stop_timer(resp_time, "buyer_login")
-            if user.is_active == "true":
-                login_user(newUser)
-                flash('You are login now!', 'success')
-                stop_timer(resp_time, "buyerLogin")
-                return redirect(url_for('home'))
-            else:
-                flash('Incorrect email and password', 'danger')
-                return redirect(url_for('customerLogin'))
+            # if user.is_active == "true":
+            #     login_user(newUser)
+            #     flash('You are login now!', 'success')
+            #     stop_timer(resp_time, "buyerLogin")
+            #     return redirect(url_for('home'))
+            token = jwt.encode({"user_name": user.buyer_username, "user_type": "seller"}, app.config["JWT_SECRET_KEY"], algorithm="HS256")
+            session["logged_in"]=True
+            # if user.is_active == "true":
+            #     login_user(newUser)
+            #     flash('You are logged in now!', 'success')
+            #     stop_timer(resp_time, "adminLogin")
+            resp = make_response(MessageToJson(user))
+            resp.set_cookie("authToken", token, httponly=True, samesite="Lax")
+            # return resp
+            return resp;
+            # else:
+            #     flash('Incorrect email and password', 'danger')
+            #     return redirect(url_for('customerLogin'))
     except Exception as e:
         print(e)
     return render_template('customer/login.html', form=form)
@@ -261,6 +304,5 @@ def get_pdf(invoice):
             response.headers['content-Disposition'] ='inline; filename='+invoice+'.pdf'
             return response
     return request(url_for('orders'))
-
 
 

@@ -1,7 +1,7 @@
 import random
 
-from flask import render_template,session, request,redirect,url_for,flash
-from shop import app, db, bcrypt, grpc_client
+from flask import render_template,session, request,redirect,url_for,flash, jsonify, make_response
+from shop import app, db, bcrypt, grpc_client,grpc_client_seller
 from .forms import LoginForm
 # from .models import User
 from .models import SellerProducts
@@ -12,19 +12,96 @@ from shop import start_timer, stop_timer
 from shop.products.models import Addproduct,Category,Brand
 import zeep
 import time
-from flask_login import current_user, logout_user, login_user, login_required
+# from flask_login import current_user, logout_user, login_user, login_required
+from google.protobuf.json_format import MessageToJson
 
 from ..customers.forms import CustomerRegisterForm, CustomerLoginFrom
 from ..customers.model import Register, Rating
 from ..grpc_server.onlineshopping_pb2 import AccountCreationRequest, AccountLoginRequest
 
 
+from ..grpc_server.seller_pb2 import SellerAddProductsRequest
+
+import jwt
+
+def auth_required(fn):
+    def decorated(**kwargs):
+        print("Inside Auth Required")
+        authToken = request.cookies.get("authToken")
+        authData = {
+            "isAuthenticated": False,
+            "userName": None,
+
+        }
+
+        if authToken:
+            try:
+                jwtData = jwt.decode(jwt=authToken, key=app.config["JWT_SECRET_KEY"], verify=True, algorithms="HS256")
+                # print(jwtData)
+                authData["isAuthenticated"] = True
+                authData["userName"] = jwtData["user_name"]
+
+            except Exception as e:
+                print("jwt varification failed: ", e)
+        else:
+            print("No token found")
+        return fn(authData, **kwargs)
+    decorated.__name__ = fn.__name__
+    return decorated
+
 @app.route('/admin')
-def admin():
+@auth_required
+def admin(authData):
     resp_time= start_timer()
-    products = Addproduct.query.all()
-    stop_timer(resp_time, "seller_landing_page_loading")
-    return render_template('admin/index.html', title='Admin page',products=products)
+    if authData["isAuthenticated"]:
+        name= authData["userName"]
+        seller_data= Register.query.filter_by(username= name).first()
+        products= Addproduct.query.filter_by(seller= seller_data.name).all()
+    # print(name, products)
+    # products = Addproduct.query.all()
+        stop_timer(resp_time, "seller_landing_page_loading")
+        return render_template('admin/index.html', title='Admin page',products=products)
+    else:
+        return redirect(url_for("admin_login_page"))
+
+@app.route('/admin/login', methods=['GET'])
+def admin_login_page():
+    return render_template('admin/login.html',title='Login page')
+
+@app.route('/admin/login', methods=['POST'])
+def admin_login():
+    resp_time= start_timer()
+    try:
+        if len(request.json["email"]) and len(request.json["password"]):
+            resp_time = start_timer()
+            input_request = AccountLoginRequest(buyer_username=request.json["email"], buyer_password=request.json["password"])
+            # user = Register.query.filter_by(email=form.email.data).first()
+            user = grpc_client.login(input_request)
+            if user.buyer_username == '' or user== None:
+                print("Invalid userid or password")
+                return jsonify({'message': "Invalid userid or password"}), 401
+            newUser = Register(id=user.buyer_id, name=user.buyer_name, username=user.buyer_username,
+                                email=user.buyer_email, password=user.buyer_password, country=user.buyer_country,
+                                city=user.buyer_city, contact=user.buyer_contact, address=user.buyer_address,
+                                zipcode=user.buyer_zipcode, itemspurchased=user.items_purchased)
+            stop_timer(resp_time, "admin_login")
+            token = jwt.encode({"user_name": user.buyer_username, "user_type": "seller"}, app.config["JWT_SECRET_KEY"], algorithm="HS256")
+            session["logged_in"]=True
+            # if user.is_active == "true":
+            #     login_user(newUser)
+            #     flash('You are logged in now!', 'success')
+            #     stop_timer(resp_time, "adminLogin")
+            resp = make_response(MessageToJson(user))
+            resp.set_cookie("authToken", token, httponly=True, samesite="Lax")
+            # return resp
+            return resp;
+            # return jsonify({'token' : token.decode('UTF-8')})
+        else:
+            flash('Incorrect email and password', 'danger')
+            return jsonify({'test': 123}), 401
+    except Exception as e:
+        print(e)
+        return jsonify({"message": "Something went wrong"}), 500
 
 @app.route('/admin/brands')
 def brands():
@@ -71,38 +148,12 @@ def admin_register():
     return render_template('customer/register.html', form=form)
 
 
-@app.route('/admin/login', methods=['GET','POST'])
-def admin_login():
-    resp_time= start_timer()
-    form = CustomerLoginFrom()
-    try:
-        if form.validate_on_submit():
-            resp_time = start_timer()
-            input_request = AccountLoginRequest(buyer_username=form.email.data, buyer_password=form.password.data)
-            # user = Register.query.filter_by(email=form.email.data).first()
-            user = grpc_client.login(input_request)
-            newUser = Register(id=user.buyer_id, name=user.buyer_name, username=user.buyer_username,
-                                email=user.buyer_email, password=user.buyer_password, country=user.buyer_country,
-                                city=user.buyer_city, contact=user.buyer_contact, address=user.buyer_address,
-                                zipcode=user.buyer_zipcode, itemspurchased=user.items_purchased)
-            stop_timer(resp_time, "admin_login")
-            if user.is_active == "true":
-                login_user(newUser)
-                flash('You are login now!', 'success')
-                stop_timer(resp_time, "adminLogin")
-                return redirect(url_for('admin'))
-            else:
-                flash('Incorrect email and password', 'danger')
-                return redirect(url_for('admin_login'))
-    except Exception as e:
-        print(e)
-    return render_template('admin/login.html',title='Login page',form=form)
-
 @app.route('/seller/productslist', methods=['GET','POST'])
-def seller_products():
+@auth_required
+def seller_products(authData):
     resp_time= start_timer()
-    if current_user.is_authenticated:
-        name= current_user.name
+    if authData["isAuthenticated"]:
+        name= authData["userName"]
         products= SellerProducts.query.filter_by(name= name).all()
         # products_= SellerProducts.query.filter_by(name= name).getprod()
         print('products', products)
@@ -125,23 +176,25 @@ def getRatingCount(name):
         return 0, 0
 
 @app.route('/seller/soldproducts', methods=['GET','POST'])
-def sold_products():
+@auth_required
+def sold_products(authData):
     resp_time= start_timer()
-    print(current_user)
-    if current_user.is_authenticated:
-        name= current_user.name
+    if authData["isAuthenticated"]:
+        name= authData["userName"]
+        print("Inside soldproducts")
         soldproducts= SoldProducts.query.filter_by(name= name).all()
+        print("after query for solditems", soldproducts)
         like, dislike = getRatingCount(name)
         sold_quant={}
         current_stock= {}
         if(len(soldproducts) > 0):
             for s in soldproducts:
-                print("soldproducts: ",s.name, 'product:', s.product, 'quantity sold:', s.quantity_sold, 'stock')#, s.stock)
+                print("soldproducts: ",s.name, 'product:', s.product, 'quantity sold:', s.quantity_sold, 'stock:' , s.stock)#, s.stock)
                 sold= s.get_sold(sellername= s.name, prod= s.product)
                 sold_quant[s.product]= s.quantity_sold
                 stock_prod= Addproduct.query.filter_by(name=s.product).first()
                 if stock_prod== None:
-                    #flash("You have sold products, sorry!", 'danger')
+                    # flash("You have sold products, sorry!", 'danger')
                     redirect(url_for('admin'))
                 else:
                     current_stock[s.product]=stock_prod.stock
@@ -149,14 +202,16 @@ def sold_products():
             stop_timer(resp_time, "view_sold_products")
             return render_template('admin/sold_products.html', title='Sold Products', name= name, sold=sold_quant, current_stock= current_stock, like=like, dislike=dislike)#, product=soldproducts.product)
         else:
+            print("I am inside print of else")
             flash("You have sold products, sorry!", 'danger')
-            redirect(url_for('admin'))
+            return redirect(url_for('admin'))
 
 
-@app.route('/seller/logout')
-def seller_logout():
-    resp_time= start_timer()
-    logout_user()
-    session.clear()
-    stop_timer(resp_time, "seller_logout")
-    return redirect(url_for('admin'))
+@app.route('/seller/logout', methods=['DELETE'])
+@auth_required
+def seller_logout(authData):
+    if authData["isAuthenticated"]:
+        resp = make_response()
+        resp.set_cookie("authToken", expires=0)
+        return resp;
+    return jsonify({'message': "User not logged in"}), 400

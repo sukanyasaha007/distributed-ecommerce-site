@@ -1,3 +1,5 @@
+# from ..shop import app
+# engine = create_engine('mysql+pymysql://remoteApplication:abc%40123@35.188.152.5/onlineshopping')
 from sqlalchemy import Column, String, Integer, Date, Numeric, \
     Text, DateTime, ForeignKey
 from datetime import datetime

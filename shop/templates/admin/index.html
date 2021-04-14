@@ -2,20 +2,21 @@
 {% block content %}
 <div class="container">
     <nav class="navbar navbar-expand-lg navbar-light bg-light">
-        <a class="navbar-brand" href="{{url_for('admin')}}">Seller</a>
+        <a class="navbar-brand" href="{{url_for('admin_login')}}">Seller</a>
         <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavDropdown" aria-controls="navbarNavDropdown" aria-expanded="false" aria-label="Toggle navigation">
           <span class="navbar-toggler-icon"></span>
         </button>
         <div class="collapse navbar-collapse" id="navbarNavDropdown">
           <ul class="navbar-nav">
             <li class="nav-item active">
+
               <a class="nav-link" href="/">product <span class="sr-only">(current)</span></a>
             </li>
             <li class="nav-item">
               <a class="nav-link" href="{{url_for('admin_login')}}">login </a>
             </li>
             <li class="nav-item">
-              <a class="nav-link" href="{{url_for('seller_logout')}}">logout </a>
+              <a class="nav-link cursor-pointer" id="logout-cta">logout </a>
             </li>
             <li class="nav-item">
               <a class="nav-link" href="{{url_for('admin_register')}}">register </a>
@@ -62,7 +63,7 @@
             <th>Brand</th>
             <th>Edit</th>
             <th>Delete</th>
-        </thead>
+        </thead>  
         <tbody>
           {% for product in products %}
           <tr>
@@ -90,7 +91,7 @@
                 </button>
               </div>
               <div class="modal-body">
-                <p class="text-danger">Are you Sure that you want to delete this Category ({{ product.name }})</p>
+                <p class="text-danger">Are you Sure that you want to delete this Product  {{ product.name }} from product list ? </p>
               </div>
               <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
