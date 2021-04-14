@@ -1,37 +1,67 @@
 import decimal
 import socket
-import onlineshopping_pb2_grpc
-from datetime import datetime
 import random
+import onlineshopping_pb2_grpc
 from onlineshopping_pb2 import (
     AccountCreationResponse, AccountCreationRequest, SearchProductResponse, ProductDetails,
-    AddToCartResponse, SearchProductRequestByDesc
+    AddToCartResponse
 )
 from models import Register, Base, DBSession, engine, Addproduct, cart
 import json
-from google.protobuf.json_format import Parse
 
 Base.metadata.create_all(engine)
 session = DBSession()
 
-UDP_IP = "127.0.0.1"
+# UDP_IP = "35.224.63.87"
+UDP_IP = "0.0.0.0"
 UPD_PORTS = [5010, 5001, 5002, 5003, 5004]
-
+UNHEALTHY_UPD_PORTS = []
 sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)  # UDP
-
-class DecimalEncoder(json.JSONEncoder):
-    def default(self, o):
-        if isinstance(o, decimal.Decimal):
-            # wanted a simple yield str(o) in the next line,
-            # but that would mean a yield on the line with super(...),
-            # which wouldn't work (see my comment below), so...
-            return (str(o) for o in [o])
-        return super(DecimalEncoder, self).default(o)
+sock.bind((UDP_IP, 5005))
+sock.settimeout(5.0)
 
 
 class BuyerActionService(onlineshopping_pb2_grpc.BuyerActionsServicer):
+
+    def __init__(self):
+        self.procs_active = None
+
+    def health_check(self):
+        UNHEALTHY_UPD_PORTS.clear()
+        request_atomic = {
+            "type": "health"
+        }
+        active_servers = 0
+        for port in UPD_PORTS:
+            print("UDP target IP: %s" % UDP_IP)
+            print("UDP target port: %s" % port)
+            print("message: %s" % request_atomic)
+            try:
+                sock.sendto(json.dumps(request_atomic).encode(), (UDP_IP, port))
+                data, addr = sock.recvfrom(2048)  # buffer size is 1024 bytes
+                active_servers += 1
+            except Exception as e:
+                UNHEALTHY_UPD_PORTS.append(port)
+                print(e)
+        self.procs_active = active_servers
+
+    def sendToAtomicBroadcastServer(self, request):
+        i = 0
+        for port in UPD_PORTS:
+            if(port not in UNHEALTHY_UPD_PORTS):
+                request["proc_no"] = i
+                print("UDP target IP: %s" % UDP_IP)
+                print("UDP target port: %s" % port)
+                print("message: %s" % request)
+                i += 1
+                try:
+                    sock.sendto(json.dumps(request).encode(), (UDP_IP, port))
+                except Exception as e:
+                    print(e)
+
     def createAccount(self, request, context):
         try:
+            self.health_check()
             print("hi")
             print(request)
             request = {"buyer_id": request.buyer_id,
@@ -45,14 +75,11 @@ class BuyerActionService(onlineshopping_pb2_grpc.BuyerActionsServicer):
                        "buyer_address": request.buyer_address,
                        "buyer_zipcode": request.buyer_zipcode,
                        "items_purchased": request.items_purchased,
-                       "type": "client"
+                       "type": "client",
+                       "function": "createAccount",
+                       "procs_active": self.procs_active
                        }
-
-            for port in UPD_PORTS:
-                print("UDP target IP: %s" % UDP_IP)
-                print("UDP target port: %s" % port)
-                print("message: %s" % request)
-                sock.sendto(json.dumps(request).encode(), (UDP_IP, port))
+            self.sendToAtomicBroadcastServer(request)
 
         except Exception as e:
             print("Exception")
@@ -60,86 +87,93 @@ class BuyerActionService(onlineshopping_pb2_grpc.BuyerActionsServicer):
             AccountCreationResponse(status="failure")
         return AccountCreationResponse(status="success")
 
-    # def getAccounts(self, request, context):
-    #     try:
-    #         list_users = []
-    #         query = {'username': { '$exists' : True}}
-    #         entries= buyers.find(query)
-    #         for entry in entries:
-    #             name = AccountCreationRequest\
-    #                 (buyer_id=entry['userId'],
-    #                  buyer_name=entry['name'],
-    #                  buyer_username=entry['username'],
-    #                  buyer_password=entry['password'],
-    #                  items_purchased=entry['noOfItemsPurchased'])
-    #             list_users.append(name)
-    #             print(entry)
-    #     except Exception as e:
-    #         print(e)
-    #     return Accounts(accounts=list_users)
 
     def login(self, request, context):
+        session.commit()
+        self.health_check()
         try:
-            print("hello")
-            user = session.query(Register).filter(Register.email == request.buyer_username).first()
-            print(user.name)
-            if(user.password == request.buyer_password):
-                print("hi")
-                return AccountCreationRequest\
-                (buyer_id=user.id,
-                 buyer_name=user.name,
-                 buyer_username=user.username,
-                 buyer_password=user.password,
-                 items_purchased=user.itemspurchased,
-                 is_active="true")
+            request_atomic = {
+                        "buyer_username" : request.buyer_username,
+                        "buyer_password" : request.buyer_password,
+                        "type": "client",
+                        "function": "login",
+                        "procs_active": self.procs_active
+            }
+            self.sendToAtomicBroadcastServer(request_atomic)
+            active_servers = 0
+            for i in range(0, self.procs_active):
+                data, addr = sock.recvfrom(2048)  # buffer size is 1024 bytes
+                active_servers += 1
 
+            message = json.loads(data.decode("utf-8"))
+            # user = session.query(Register).filter(Register.email == request.buyer_username).first()
+            # print(user.name)
+            if ("buyer_id" in message):
+                print(message)
+                return AccountCreationRequest \
+                    (buyer_id=message["buyer_id"],
+                     buyer_name=message["buyer_name"],
+                     buyer_username=message["buyer_username"],
+                     buyer_password=message["buyer_password"],
+                     items_purchased=message["items_purchased"],
+                     is_active="true")
+            else:
+                return AccountCreationRequest()
         except Exception as e:
             print(e)
         return AccountCreationRequest()
 
-    def search(self, request, context):
-        json_docs = []
-        print(request)
-        product = session.query(Addproduct).filter(Addproduct.id == request.product).first()
-        print(product)
-        json_docs.append(ProductDetails(
-        id = product.id,
-        name = product.name,
-        price = str(product.price),
-        discount = product.discount,
-        stock = product.stock,
-        colors = product.colors,
-        desc = product.desc,
-        pub_date = str(product.pub_date),
-        category_id = product.category_id,
-        category = product.category.name,
-        brand_id = product.brand_id,
-        brand = product.brand.name,
-        image_1 = product.image_1,
-        image_2 = product.image_2,
-        image_3 = product.image_3,
-        condition = product.condition
-        ))
-        return SearchProductResponse(products=json_docs)
+
+
+    # def search(self, request, context):
+    #     session.commit()
+    #     json_docs = []
+    #     print(request)
+    #     product = session.query(Addproduct).filter(Addproduct.id == request.product).first()
+    #     print(product)
+    #     json_docs.append(ProductDetails(
+    #     id = product.id,
+    #     name = product.name,
+    #     price = str(product.price),
+    #     discount = product.discount,
+    #     stock = product.stock,
+    #     colors = product.colors,
+    #     desc = product.desc,
+    #     pub_date = str(product.pub_date),
+    #     category_id = product.category_id,
+    #     category = product.category.name,
+    #     brand_id = product.brand_id,
+    #     brand = product.brand.name,
+    #     image_1 = product.image_1,
+    #     image_2 = product.image_2,
+    #     image_3 = product.image_3,
+    #     condition = product.condition
+    #     ))
+    #     return SearchProductResponse(products=json_docs)
 
     def addToCart(self, request, context):
+        session.commit()
         print(request)
         try:
             id = random.randint(0, 10000)
-            session.add(cart(id=id, product_id=request.products.products[0].id,
-            customer_id = int(request.customerId),
-            name = request.products.products[0].name,
-            price = str(request.products.products[0].price),
-            discount = request.products.products[0].discount,
-            stock = 1,
-            colors = request.products.products[0].colors,
-            desc = request.products.products[0].desc,
-            pub_date = str(request.products.products[0].pub_date),
-            image_1 = request.products.products[0].image_1,
-            image_2 = request.products.products[0].image_2,
-            image_3 = request.products.products[0].image_3
-            ))
-            session.commit()
+            request  = {
+                "id": id,
+                "product_id" : request.products.products[0].id,
+                "customer_id" : int(request.customerId),
+                "name" : request.products.products[0].name,
+                "price" : str(request.products.products[0].price),
+                "discount" : request.products.products[0].discount,
+                "stock" : 1,
+                "colors" : request.products.products[0].colors,
+                "desc" : request.products.products[0].desc,
+                "image_1": request.products.products[0].image_1,
+                "image_2" : request.products.products[0].image_2,
+                "image_3" : request.products.products[0].image_3,
+                "pub_date" : str(request.products.products[0].pub_date),
+                "type": "client",
+                "function": "addToCart"
+            }
+            self.sendToAtomicBroadcastServer(request)
             return AddToCartResponse(status="success", price="23")
         except Exception as e:
             print(e)
@@ -193,6 +227,7 @@ class BuyerActionService(onlineshopping_pb2_grpc.BuyerActionsServicer):
 
 
     def getProductsBySearchword(self, request, context):
+        session.commit()
         regex = r'.*' + request.searchword + '.*'
         products = session.query(Addproduct).filter(Addproduct.desc.op('regexp')(regex) |
                                                     Addproduct.name.op('regexp')(regex)).all()
@@ -221,7 +256,12 @@ class BuyerActionService(onlineshopping_pb2_grpc.BuyerActionsServicer):
         return searchprodResponse
 
     def getFromcart(self,  request, context):
+        print(request)
+        session.commit()
         products = session.query(cart).filter(cart.customer_id == int(request.customerId)).all()
+        products1 = session.query(cart).all()
+        for pr in products:
+            print(pr.name)
         listProducts = []
         for product in products:
             message = ProductDetails()
@@ -248,24 +288,14 @@ class BuyerActionService(onlineshopping_pb2_grpc.BuyerActionsServicer):
 
     def updateproductQuantity(self,  request, context):
         try:
-            if(request.quantity == -99999):
-                products = session.query(cart).filter(cart.customer_id == request.customer
-                                                  , cart.product_id == request.product).all()
-                for o in products:
-                    session.delete(o)
-                session.commit()
-                return AddToCartResponse(status="success", price="23")
-
-            if(request.quantity == 0):
-                products = session.query(cart).filter(cart.customer_id == request.customer).all()
-                for o in products:
-                    session.delete(o)
-                session.commit()
-                return AddToCartResponse(status="success", price="23")
-
-            products = session.query(cart).filter(cart.product_id == request.product , cart.customer_id == request.customer).first()
-            products.stock = request.quantity
-            session.commit()
+            request = {
+                "customer" : request.customer,
+                "product" : request.product,
+                "quantity" : request.quantity,
+                "type": "client",
+                "function": "updateproductQuantity"
+            }
+            self.sendToAtomicBroadcastServer(request)
             return AddToCartResponse(status="success", price="23")
         except Exception as e:
             print(e)

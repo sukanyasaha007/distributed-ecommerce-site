@@ -1,12 +1,10 @@
 # recommendations/buyerActions.py
-from datetime import datetime
 from concurrent import futures
 import grpc
 import logging
 
 import onlineshopping_pb2_grpc
 from BuyerActionService import BuyerActionService
-import os
 
 # _PORT = os.environ["PORT"]
 _PORT = 50051

@@ -19,6 +19,7 @@ basedir = os.path.abspath(os.path.dirname(__file__))
 app = Flask(__name__)
 # app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:@34.67.70.132/onlineshopping'
 app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:pass@host.docker.internal:3325/onlineshopping'
+# app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://nmk:pass@35.224.42.55:3306/onlineshopping'
 
 app.config['SECRET_KEY']='djshakuo'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
