@@ -21,7 +21,7 @@ recieve = {}
 recieveBuffer = []
 sendBuffer = []
 
-engine = create_engine('mysql+pymysql://nmk:pass@35.185.208.232:3328/onlineshopping')
+engine = create_engine('mysql+pymysql://nmk:pass@35.185.208.232:3306/onlineshopping')
 DBSession = sessionmaker(bind=engine)
 Base.metadata.create_all(engine)
 session = DBSession()
