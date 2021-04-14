@@ -14,7 +14,7 @@ local_seq_num = 0
 global_seq_num = 0
 proc_no = 1
 sender_id = 456
-sock.bind((UDP_IP, UDP_PORT))
+sock.bind((currentip, UDP_PORT))
 
 send = {}
 recieve = {}
