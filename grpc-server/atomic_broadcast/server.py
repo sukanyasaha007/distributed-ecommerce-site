@@ -8,13 +8,14 @@ from atomicBroadcastServer import AtomicBroadcast
 # UDP_IP = "104.198.242.219"
 # UDP_IP = ["0.0.0.0"]
 UDP_IP = ["35.193.31.141", "34.122.75.220", "35.197.116.39"]
+currentip = "34.68.92.73"
 UDP_PORT = 5010
 sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)  # UDP
 local_seq_num = 0
 global_seq_num = 0
 proc_no = 0
 sender_id = 123
-sock.bind((UDP_IP, UDP_PORT))
+sock.bind((currentip, UDP_PORT))
 
 send = {}
 recieve = {}
