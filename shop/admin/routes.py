@@ -181,7 +181,9 @@ def sold_products(authData):
     resp_time= start_timer()
     if authData["isAuthenticated"]:
         name= authData["userName"]
+        print("Inside soldproducts")
         soldproducts= SoldProducts.query.filter_by(name= name).all()
+        print("after query for solditems", soldproducts)
         like, dislike = getRatingCount(name)
         sold_quant={}
         current_stock= {}
@@ -200,8 +202,9 @@ def sold_products(authData):
             stop_timer(resp_time, "view_sold_products")
             return render_template('admin/sold_products.html', title='Sold Products', name= name, sold=sold_quant, current_stock= current_stock, like=like, dislike=dislike)#, product=soldproducts.product)
         else:
+            print("I am inside print of else")
             flash("You have sold products, sorry!", 'danger')
-            redirect(url_for('admin'))
+            return redirect(url_for('admin'))
 
 
 @app.route('/seller/logout', methods=['DELETE'])

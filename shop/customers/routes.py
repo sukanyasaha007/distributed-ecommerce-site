@@ -1,4 +1,4 @@
-from flask import render_template,session, redirect,url_for,flash, make_response
+from flask import render_template,session, redirect,url_for,flash, make_response, jsonify
 from flask_login import login_required, current_user, logout_user, login_user
 from shop import app,db, soap_host
 from .forms import CustomerRegisterForm, CustomerLoginFrom, RatingForm
@@ -12,6 +12,7 @@ import pdfkit
 import stripe
 import zeep
 import time
+from google.protobuf.json_format import MessageToJson
 
 from shop.grpc_server.onlineshopping_pb2 import AccountCreationRequest, AccountLoginRequest
 
@@ -143,7 +144,7 @@ def customer_register():
     return render_template('customer/register.html', form=form)
 
 
-@app.route('/customer/login', methods=['GET','POST'])
+@app.route('/customer/login', methods=['POST'])
 def customerLogin():
     resp_time = start_timer()
     form = CustomerLoginFrom()
@@ -152,19 +153,33 @@ def customerLogin():
             input_request = AccountLoginRequest(buyer_username=form.email.data, buyer_password=form.password.data)
             # user = Register.query.filter_by(email=form.email.data).first()
             user = grpc_client.login(input_request)
+            if user.buyer_username == '' or user== None:
+                print("Invalid userid or password")
+                return jsonify({'message': "Invalid userid or password"}), 401
+            
             newUser = Register(id=user.buyer_id, name=user.buyer_name, username=user.buyer_username,
                                 email=user.buyer_email, password=user.buyer_password, country=user.buyer_country,
                                 city=user.buyer_city, contact=user.buyer_contact, address=user.buyer_address,
                                 zipcode=user.buyer_zipcode, itemspurchased=user.items_purchased)
             stop_timer(resp_time, "buyer_login")
-            if user.is_active == "true":
-                login_user(newUser)
-                flash('You are login now!', 'success')
-                stop_timer(resp_time, "buyerLogin")
-                return redirect(url_for('home'))
-            else:
-                flash('Incorrect email and password', 'danger')
-                return redirect(url_for('customerLogin'))
+            # if user.is_active == "true":
+            #     login_user(newUser)
+            #     flash('You are login now!', 'success')
+            #     stop_timer(resp_time, "buyerLogin")
+            #     return redirect(url_for('home'))
+            token = jwt.encode({"user_name": user.buyer_username, "user_type": "seller"}, app.config["JWT_SECRET_KEY"], algorithm="HS256")
+            session["logged_in"]=True
+            # if user.is_active == "true":
+            #     login_user(newUser)
+            #     flash('You are logged in now!', 'success')
+            #     stop_timer(resp_time, "adminLogin")
+            resp = make_response(MessageToJson(user))
+            resp.set_cookie("authToken", token, httponly=True, samesite="Lax")
+            # return resp
+            return resp;
+            # else:
+            #     flash('Incorrect email and password', 'danger')
+            #     return redirect(url_for('customerLogin'))
     except Exception as e:
         print(e)
     return render_template('customer/login.html', form=form)
