@@ -20,7 +20,7 @@ class dbops():
         session.add(record)
         session.commit()
 
-    def login(request, session, sock):
+    def login(request, session, sock, ip):
         try:
             print("hello")
             request = json.loads(request)
@@ -43,18 +43,18 @@ class dbops():
                     "buyer_username": user.username,
                     "buyer_password": user.password,
                     "items_purchased": user.itemspurchased,
-                    "is_active": "true"}).encode(), ("127.0.0.1", 5005))
+                    "is_active": "true"}).encode(), (ip, 5005))
             else:
                 sock.sendto(json.dumps({
                     "failure": "yes",
-                    "is_active": "true"}).encode(), ("127.0.0.1", 5005))
+                    "is_active": "true"}).encode(), (ip, 5005))
 
 
         except Exception as e:
             print(e)
             sock.sendto(json.dumps({
                 "failure": "yes",
-                "is_active": "true"}).encode(), ("127.0.0.1", 5005))
+                "is_active": "true"}).encode(), (ip, 5005))
 
     def addToCart(request, session):
         print("adding to cart")

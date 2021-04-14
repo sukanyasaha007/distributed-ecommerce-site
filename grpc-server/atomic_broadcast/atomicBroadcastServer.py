@@ -9,7 +9,7 @@ class AtomicBroadcast():
         if(temp["function"] == "createAccount"):
             dbops.createAccount(message["data"], session)
         if (temp["function"] == "login"):
-            dbops.login(message["data"], session, sock)
+            dbops.login(message["data"], session, sock, temp["ip"])
         if (temp["function"] == "addToCart"):
             dbops.addToCart(message["data"], session)
         if (temp["function"] == "updateproductQuantity"):
@@ -28,7 +28,7 @@ class AtomicBroadcast():
             print("Yooooooo", global_seq_num + 1, procs_active, proc_no)
 
         if (message["type"] == "health"):
-            sock.sendto(json.dumps({"health":"healthy"}).encode(), ("127.0.0.1", 5005))
+            sock.sendto(json.dumps({"health":"healthy"}).encode(), (message["ip"], 5005))
 
         elif (message["type"] == "receiveMessage" and (((global_seq_num + 1) % procs_active) == proc_no)):
             if (not recieve or (global_seq_num + 1 == (max(recieve) + 1))):
@@ -47,8 +47,8 @@ class AtomicBroadcast():
                     for k in range(max(recieve) + 1, global_seq_num+1):
                         message = {"global_seq_num": k,
                                    "type": "resendMessage"}
-                        for i in ports:
-                            sock.sendto(json.dumps(message).encode(), (UDP_IP, i))
+                        for ip, i in zip(UDP_IP, ports):
+                            sock.sendto(json.dumps(message).encode(), (ip, i))
 
                     while (not recieveBuffer):
                         message = recieveBuffer.pop(0)
@@ -58,8 +58,8 @@ class AtomicBroadcast():
                         message = {"local_seq_num": local_seq_num, "data": message["data"],
                                    "sender_id": message["sender_id"],
                                    "global_seq_num": global_seq_num, "type": "sendMessage"}
-                        for i in ports:
-                            sock.sendto(json.dumps(message).encode(), (UDP_IP, i))
+                        for ip, i in zip(UDP_IP, ports):
+                            sock.sendto(json.dumps(message).encode(), (ip, i))
                         send[global_seq_num] = (message)
                         self.checkMessage(message, session, sock)
             else:
@@ -75,7 +75,7 @@ class AtomicBroadcast():
 
         elif (message["type"] == "resendMessage" and (((message["global_seq_num"] + 1) % 5) == proc_no)):
             toSend = recieve[int(message["global_seq_num"])]
-            for i in ports:
-                sock.sendto(json.dumps(toSend).encode(), (UDP_IP, i))
+            for ip, i in zip(UDP_IP, ports):
+                sock.sendto(json.dumps(toSend).encode(), (ip, i))
 
         return local_seq_num, global_seq_num, recieve, recieveBuffer, send

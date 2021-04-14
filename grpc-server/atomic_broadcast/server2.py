@@ -5,7 +5,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from atomicBroadcastServer import AtomicBroadcast
 
-UDP_IP = "0.0.0.0"
+UDP_IP = ["34.68.92.73", "34.68.161.184", "35.197.116.39"]
 
 UDP_PORT = 5002
 sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)  # UDP
@@ -20,7 +20,7 @@ recieve = {}
 recieveBuffer = []
 sendBuffer = []
 
-engine = create_engine('mysql+pymysql://root:pass@host.docker.internal:3327/onlineshopping')
+engine = create_engine('mysql+pymysql://nmk:pass@35.197.69.106:3327/onlineshopping')
 DBSession = sessionmaker(bind=engine)
 Base.metadata.create_all(engine)
 session = DBSession()
@@ -39,7 +39,7 @@ while True:
                    "type": "receiveMessage"}
         data = json.dumps(message).encode()
 
-    ports = [5010, 5001, 5003, 5004]
+    ports = [5010, 5001, 5003]
     local_seq_num, global_seq_num, recieve, recieveBuffer, send =\
         atomic_broadcast.recieveMessage(
         data, local_seq_num, global_seq_num, recieve,

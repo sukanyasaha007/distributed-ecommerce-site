@@ -6,7 +6,8 @@ from sqlalchemy.orm import sessionmaker
 from atomicBroadcastServer import AtomicBroadcast
 
 # UDP_IP = "104.198.242.219"
-UDP_IP = "0.0.0.0"
+# UDP_IP = ["0.0.0.0"]
+UDP_IP = ["35.193.31.141", "34.122.75.220", "35.197.116.39"]
 UDP_PORT = 5010
 sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)  # UDP
 local_seq_num = 0
@@ -20,8 +21,8 @@ recieve = {}
 recieveBuffer = []
 sendBuffer = []
 
-# engine = create_engine('mysql+pymysql://nmk:pass@35.224.42.55:3306/onlineshopping')
-engine = create_engine('mysql+pymysql://root:pass@host.docker.internal:3325/onlineshopping')
+engine = create_engine('mysql+pymysql://nmk:pass@35.238.64.48:3306/onlineshopping')
+# engine = create_engine('mysql+pymysql://root:pass@host.docker.internal:3325/onlineshopping')
 DBSession = sessionmaker(bind=engine)
 Base.metadata.create_all(engine)
 session = DBSession()
@@ -37,7 +38,7 @@ if __name__ == "__main__":
             data = json.dumps(message).encode()
             # sock.sendto(json.dumps(message).encode(), (UDP_IP, 5001))
 
-        ports = [5001, 5002, 5003, 5004]
+        ports = [5001, 5002, 5003]
         local_seq_num, global_seq_num, recieve, recieveBuffer, send = \
             atomic_broadcast.recieveMessage(
             data, local_seq_num, global_seq_num,recieve,
