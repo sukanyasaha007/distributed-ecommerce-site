@@ -4,9 +4,9 @@ from datetime import datetime
 from sqlalchemy.orm import sessionmaker, relationship
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
-engine = create_engine('mysql+pymysql://root:pass@host.docker.internal:3325/onlineshopping')
+# engine = create_engine('mysql+pymysql://root:pass@host.docker.internal:3325/onlineshopping')
 # engine = create_engine('mysql+pymysql://root:my-secret-pw@host.docker.internal:3306/onlineshopping')
-# engine = create_engine('mysql+pymysql://nmk:pass@35.224.42.55:3306/onlineshopping')
+engine = create_engine('mysql+pymysql://nmk:pass@35.238.64.48:3306/onlineshopping')
 Base = declarative_base()
 DBSession = sessionmaker(bind=engine)
 

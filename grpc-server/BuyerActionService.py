@@ -13,11 +13,12 @@ Base.metadata.create_all(engine)
 session = DBSession()
 
 # UDP_IP = "35.224.63.87"
-UDP_IP = "0.0.0.0"
-UPD_PORTS = [5010, 5001, 5002, 5003, 5004]
+currentip = ""
+UDP_IP = ["34.68.92.73", "35.193.31.141", "34.122.75.220", "35.197.116.39"]
+UPD_PORTS = [5010, 5001, 5002, 5003]
 UNHEALTHY_UPD_PORTS = []
 sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)  # UDP
-sock.bind((UDP_IP, 5005))
+sock.bind((currentip, 5005))
 sock.settimeout(5.0)
 
 
@@ -30,15 +31,15 @@ class BuyerActionService(onlineshopping_pb2_grpc.BuyerActionsServicer):
         UNHEALTHY_UPD_PORTS.clear()
         request_atomic = {
             "type": "health",
-            "ip" : UDP_IP
+            "ip" : currentip
         }
         active_servers = 0
-        for port in UPD_PORTS:
-            print("UDP target IP: %s" % UDP_IP)
+        for ip, port in zip(UDP_IP, UPD_PORTS):
+            print("UDP target IP: %s" % ip)
             print("UDP target port: %s" % port)
             print("message: %s" % request_atomic)
             try:
-                sock.sendto(json.dumps(request_atomic).encode(), (UDP_IP, port))
+                sock.sendto(json.dumps(request_atomic).encode(), (ip, port))
                 data, addr = sock.recvfrom(2048)  # buffer size is 1024 bytes
                 active_servers += 1
             except Exception as e:
@@ -48,15 +49,15 @@ class BuyerActionService(onlineshopping_pb2_grpc.BuyerActionsServicer):
 
     def sendToAtomicBroadcastServer(self, request):
         i = 0
-        for port in UPD_PORTS:
+        for ip, port in zip(UDP_IP, UPD_PORTS):
             if(port not in UNHEALTHY_UPD_PORTS):
                 request["proc_no"] = i
-                print("UDP target IP: %s" % UDP_IP)
+                print("UDP target IP: %s" % ip)
                 print("UDP target port: %s" % port)
                 print("message: %s" % request)
                 i += 1
                 try:
-                    sock.sendto(json.dumps(request).encode(), (UDP_IP, port))
+                    sock.sendto(json.dumps(request).encode(), (ip, port))
                 except Exception as e:
                     print(e)
 
@@ -79,7 +80,7 @@ class BuyerActionService(onlineshopping_pb2_grpc.BuyerActionsServicer):
                        "type": "client",
                        "function": "createAccount",
                        "procs_active": self.procs_active,
-                       "ip": UDP_IP
+                       "ip": currentip
                        }
             self.sendToAtomicBroadcastServer(request)
 
@@ -100,7 +101,7 @@ class BuyerActionService(onlineshopping_pb2_grpc.BuyerActionsServicer):
                         "type": "client",
                         "function": "login",
                         "procs_active": self.procs_active,
-                        "ip": UDP_IP
+                        "ip": currentip
             }
             self.sendToAtomicBroadcastServer(request_atomic)
             active_servers = 0
