@@ -65,8 +65,9 @@ def payment(authData):
     #   amount=amount,
     #   currency='usd',
     # )
-        
-    orders =  CustomerOrder.query.filter_by(customer_id = current_user.id,invoice=invoice).order_by(CustomerOrder.id.desc()).first()
+    buyer_data= Register.query.filter_by(username= authData["userName"]).first()
+    print("buyer_data.id", buyer_data.id)
+    orders =  CustomerOrder.query.filter_by(customer_id = buyer_data.id,invoice=invoice).order_by(CustomerOrder.id.desc()).first()
     orders.status = 'Paid'
     db.session.commit()
     result = makeTransaction(order=invoice)
@@ -144,15 +145,21 @@ def customer_register():
     return render_template('customer/register.html', form=form)
 
 
-@app.route('/customer/login', methods=['POST'])
+@app.route('/customer/login', methods=['GET','POST'])
 def customerLogin():
     resp_time = start_timer()
-    form = CustomerLoginFrom()
+    # form = CustomerLoginFrom()
+    print("check 1", request.args.get("email"), request.args.get("password"))
+
     try:
-        if form.validate_on_submit():
-            input_request = AccountLoginRequest(buyer_username=form.email.data, buyer_password=form.password.data)
+        if len(request.args.get("email")) and len(request.args.get("password")):
+            
+            input_request = AccountLoginRequest(buyer_username=request.args.get("email"), buyer_password=request.args.get("password"))
+            # input_request = AccountLoginRequest(buyer_username=form.email.data, buyer_password=form.password.data)
             # user = Register.query.filter_by(email=form.email.data).first()
+            print("check 2", input_request)
             user = grpc_client.login(input_request)
+            print("check3", user)
             if user.buyer_username == '' or user== None:
                 print("Invalid userid or password")
                 return jsonify({'message': "Invalid userid or password"}), 401
@@ -161,6 +168,7 @@ def customerLogin():
                                 email=user.buyer_email, password=user.buyer_password, country=user.buyer_country,
                                 city=user.buyer_city, contact=user.buyer_contact, address=user.buyer_address,
                                 zipcode=user.buyer_zipcode, itemspurchased=user.items_purchased)
+            print("I am inside customer login")
             stop_timer(resp_time, "buyer_login")
             # if user.is_active == "true":
             #     login_user(newUser)
@@ -170,8 +178,8 @@ def customerLogin():
             token = jwt.encode({"user_name": user.buyer_username, "user_type": "seller"}, app.config["JWT_SECRET_KEY"], algorithm="HS256")
             session["logged_in"]=True
             # if user.is_active == "true":
-            #     login_user(newUser)
             #     flash('You are logged in now!', 'success')
+            #     login_user(newUser)
             #     stop_timer(resp_time, "adminLogin")
             resp = make_response(MessageToJson(user))
             resp.set_cookie("authToken", token, httponly=True, samesite="Lax")
@@ -180,9 +188,13 @@ def customerLogin():
             # else:
             #     flash('Incorrect email and password', 'danger')
             #     return redirect(url_for('customerLogin'))
+        else:
+            flash('Incorrect email and password', 'danger')
+            return render_template('customer/login.html')
     except Exception as e:
         print(e)
-    return render_template('customer/login.html', form=form)
+    # return jsonify({"message": "Something went wrong"}), 500
+    return render_template('customer/login.html')
 
 
 @app.route('/customer/logout')
@@ -201,16 +213,17 @@ def updateshoppingcart():
     return updateshoppingcart
 
 @app.route('/getorder')
-@login_required
-def get_order():
+@auth_required_buyer
+def get_order(authData):
     resp_time = start_timer()
-    if current_user.is_authenticated:
-        customer_id = current_user.id
+    if authData["isAuthenticated"]:
+        # customer_id = current_user.id
+        buyer_data= Register.query.filter_by(username= authData["userName"]).first()
         invoice = secrets.token_hex(5)
         id = random.randint(0, 100000)
         updateshoppingcart
         try:
-            order = CustomerOrder(id=id, invoice=invoice,customer_id=customer_id,orders=session['Shoppingcart'])
+            order = CustomerOrder(id=id, invoice=invoice,customer_id=buyer_data.id,orders=session['Shoppingcart'])
             db.session.add(order)
             db.session.commit()
             session.pop('Shoppingcart')
@@ -225,7 +238,7 @@ def get_order():
 
 
 @app.route('/orders/<invoice>')
-@login_required
+@auth_required_buyer
 def orders(invoice):
     resp_time = start_timer()
     if current_user.is_authenticated:

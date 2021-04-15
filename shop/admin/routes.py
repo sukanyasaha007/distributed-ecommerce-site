@@ -73,9 +73,10 @@ def admin_login():
     resp_time= start_timer()
     try:
         if len(request.json["email"]) and len(request.json["password"]):
-            resp_time = start_timer()
+            
             input_request = AccountLoginRequest(buyer_username=request.json["email"], buyer_password=request.json["password"])
             # user = Register.query.filter_by(email=form.email.data).first()
+            # print(input_request)
             user = grpc_client.login(input_request)
             if user.buyer_username == '' or user== None:
                 print("Invalid userid or password")

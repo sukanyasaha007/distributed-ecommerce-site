@@ -15,7 +15,7 @@ def serve():
     onlineshopping_pb2_grpc.add_BuyerActionsServicer_to_server(
         BuyerActionService(), server
     )
-    server.add_insecure_port(f"107.178.249.135:{_PORT}")
+    server.add_insecure_port(f"[::]:50051")
     server.start()
     server.wait_for_termination()
 
