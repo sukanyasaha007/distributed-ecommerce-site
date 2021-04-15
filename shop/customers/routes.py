@@ -168,9 +168,9 @@ def home(authData):
         seller_data= Register.query.filter_by(username= name).first()
         # products= Addproduct.query.filter_by(seller= seller_data.name).all()
         products = Addproduct.query.filter(Addproduct.stock > 0).order_by(Addproduct.id.desc()).paginate(page=page, per_page=8)
-        print("check1",name, products)    
+        print("check1",authData, products)
         stop_timer(resp_time, "getHomePage")
-        return render_template('products/index.html', products=products,brands=brands(),categories=categories())
+        return render_template('products/index.html', products=products,brands=brands(),categories=categories(), user=name)
     else:
         return redirect(url_for("customer_login_page"))
 
@@ -215,6 +215,7 @@ def customerLogin():
 
 @app.route('/customer/logout')
 def customer_logout():
+    resp.set_cookie('sessionID', '', expires=0)
     resp_time = start_timer()
     logout_user()
     session.clear()

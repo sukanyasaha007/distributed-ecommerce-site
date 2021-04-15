@@ -8,7 +8,7 @@
         <div class="collapse navbar-collapse" id="navbarSupportedContent">
           <ul class="navbar-nav mr-auto">
             <li class="nav-item active">
-              <a class="nav-link" href="/">Products <span class="sr-only">(current)</span></a>
+              <a class="nav-link" href="/">Products <span class="sr-only">{{user}}</span></a>
             </li>
             <li class="nav-item dropdown">
               <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
@@ -31,9 +31,9 @@
                   {% endfor %}
                 </div>
               </li>
-             {% if current_user.is_authenticated %}
+             {% if user %}
              <li class="nav-item">
-              <a href="{{url_for('customer_logout')}}" class="nav-link">{{current_user.name}}</a>
+              <a href="{{url_for('customer_logout')}}" class="nav-link">{{user}}</a>
             </li>
              <li class="nav-item">
                <a href="{{url_for('customer_logout')}}" class="nav-link"> Logout</a>
