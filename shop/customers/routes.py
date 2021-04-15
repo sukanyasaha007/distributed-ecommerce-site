@@ -19,7 +19,7 @@ from shop.grpc_server.onlineshopping_pb2 import AccountCreationRequest, AccountL
 from flask import request
 from shop import grpc_client
 import jwt
-from ..products.routes import brands, categories
+
 buplishable_key ='pk_test_51IN5nDCVZ5Yf06wRG9BLSKuBUaUqXKWKxbQPjAtHcsYdZgY0NiTG0aXIf25Ll29ItyhvnxjBa1FSUJPCo107MmCD00nkqBkcID'
 stripe.api_key ='sk_test_51IN5nDCVZ5Yf06wROWN3sRW7aVEhhCfo3obH4jNrU1MuzrOVeLS03hIwbs3UHOcL0v356Z01J1eP8rpcOZT6tQjF00HLVt218C'
 
@@ -143,34 +143,19 @@ def customer_register():
             flash(f'Error in registering for {form.name.data}. Try again', 'danger')
             return redirect(url_for('customerRegister'))
     return render_template('customer/register.html', form=form)
-# @app.route('/')
-# @auth_required_buyer
-# def customer(authData):
-#     resp_time= start_timer()
-#     if authData["isAuthenticated"]:
-#         name= authData["userName"]
-#         seller_data= Register.query.filter_by(username= name).first()
-#         products= Addproduct.query.filter_by(seller= seller_data.name).all()
-#     # print(name, products)
-#     # products = Addproduct.query.all()
-#         stop_timer(resp_time, "buyer_landing_page_loading")
-#         print("Inside customer func")
-#         return redirect(url_for("home", title='Customer page',products=products))
-#     else:
-#         return redirect(url_for("customer_login_page"))
 @app.route('/')
 @auth_required_buyer
-def home(authData):
-    resp_time = start_timer()
-    page = request.args.get('page',1, type=int)
+def customer(authData):
+    resp_time= start_timer()
     if authData["isAuthenticated"]:
         name= authData["userName"]
         seller_data= Register.query.filter_by(username= name).first()
-        # products= Addproduct.query.filter_by(seller= seller_data.name).all()
-        products = Addproduct.query.filter(Addproduct.stock > 0).order_by(Addproduct.id.desc()).paginate(page=page, per_page=8)
-        print("check1",name, products)    
-        stop_timer(resp_time, "getHomePage")
-        return render_template('products/index.html', products=products,brands=brands(),categories=categories())
+        products= Addproduct.query.filter_by(seller= seller_data.name).all()
+    # print(name, products)
+    # products = Addproduct.query.all()
+        stop_timer(resp_time, "buyer_landing_page_loading")
+        print("Inside customer func")
+        return redirect(url_for("home", title='Customer page',products=products))
     else:
         return redirect(url_for("customer_login_page"))
 
@@ -186,8 +171,9 @@ def customerLogin():
     try:
         if len(request.json["email"]) and len(request.json["password"]):
             input_request = AccountLoginRequest(buyer_username=request.json["email"], buyer_password=request.json["password"])
+            print("check 2", input_request)
             user = grpc_client.login(input_request)
-            print("check 4", user)
+            print("check 3", user)
             if user.buyer_username == '' or user== None:
                 print("Invalid userid or password")
                 return jsonify({'message': "Invalid userid or password"}), 401
@@ -196,11 +182,12 @@ def customerLogin():
                                 email=user.buyer_email, password=user.buyer_password, country=user.buyer_country,
                                 city=user.buyer_city, contact=user.buyer_contact, address=user.buyer_address,
                                 zipcode=user.buyer_zipcode, itemspurchased=user.items_purchased)
-            token = jwt.encode({"user_name": user.buyer_name, "user_type": "seller"}, app.config["JWT_SECRET_KEY"], algorithm="HS256")
+            token = jwt.encode({"user_name": user.buyer_username, "user_type": "seller"}, app.config["JWT_SECRET_KEY"], algorithm="HS256")
             session["logged_in"]=True
             resp = make_response(MessageToJson(user))
             resp.set_cookie("authToken", token, httponly=True, samesite="Lax")
             stop_timer(resp_time, "buyer_login")
+            print("check 4", resp, token)
             return resp;
         else:
             flash('Incorrect email and password', 'danger')
