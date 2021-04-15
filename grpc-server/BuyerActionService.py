@@ -1,6 +1,7 @@
 import decimal
 import socket
 import random
+import os
 import onlineshopping_pb2_grpc
 from onlineshopping_pb2 import (
     AccountCreationResponse, AccountCreationRequest, SearchProductResponse, ProductDetails,
@@ -13,12 +14,10 @@ Base.metadata.create_all(engine)
 session = DBSession()
 
 # UDP_IP = "35.224.63.87"
-currentip = ""
 UDP_IP = ["34.68.92.73", "35.193.31.141", "34.122.75.220", "35.197.116.39"]
 UPD_PORTS = [5010, 5001, 5002, 5003]
 UNHEALTHY_UPD_PORTS = []
 sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)  # UDP
-sock.bind((currentip, 5005))
 sock.settimeout(5.0)
 
 
@@ -29,21 +28,20 @@ class BuyerActionService(onlineshopping_pb2_grpc.BuyerActionsServicer):
 
     def health_check(self):
         UNHEALTHY_UPD_PORTS.clear()
-        request_atomic = {
-            "type": "health",
-            "ip" : currentip
-        }
         active_servers = 0
         for ip, port in zip(UDP_IP, UPD_PORTS):
             print("UDP target IP: %s" % ip)
             print("UDP target port: %s" % port)
-            print("message: %s" % request_atomic)
+            hostname = ip
+            response = os.system("ping -c 1 " + hostname)
             try:
-                sock.sendto(json.dumps(request_atomic).encode(), (ip, port))
-                data, addr = sock.recvfrom(2048)  # buffer size is 1024 bytes
-                active_servers += 1
+                if response == 0:
+                    print(hostname, 'is up!')
+                    active_servers += 1
+                else:
+                    print(hostname, 'is down!')
+                    UNHEALTHY_UPD_PORTS.append(port)
             except Exception as e:
-                UNHEALTHY_UPD_PORTS.append(port)
                 print(e)
         self.procs_active = active_servers
 
@@ -80,7 +78,6 @@ class BuyerActionService(onlineshopping_pb2_grpc.BuyerActionsServicer):
                        "type": "client",
                        "function": "createAccount",
                        "procs_active": self.procs_active,
-                       "ip": currentip
                        }
             self.sendToAtomicBroadcastServer(request)
 
@@ -93,36 +90,20 @@ class BuyerActionService(onlineshopping_pb2_grpc.BuyerActionsServicer):
 
     def login(self, request, context):
         session.commit()
-        self.health_check()
+        # self.health_check()
         try:
-            request_atomic = {
-                        "buyer_username" : request.buyer_username,
-                        "buyer_password" : request.buyer_password,
-                        "type": "client",
-                        "function": "login",
-                        "procs_active": self.procs_active,
-                        "ip": currentip
-            }
-            self.sendToAtomicBroadcastServer(request_atomic)
-            active_servers = 0
-            for i in range(0, self.procs_active):
-                data, addr = sock.recvfrom(2048)  # buffer size is 1024 bytes
-                active_servers += 1
-
-            message = json.loads(data.decode("utf-8"))
-            # user = session.query(Register).filter(Register.email == request.buyer_username).first()
-            # print(user.name)
-            if ("buyer_id" in message):
-                print(message)
+            print("hello")
+            user = session.query(Register).filter(Register.email == request.buyer_username).first()
+            print(user.name)
+            if (user.password == request.buyer_password):
+                print("hi")
                 return AccountCreationRequest \
-                    (buyer_id=message["buyer_id"],
-                     buyer_name=message["buyer_name"],
-                     buyer_username=message["buyer_username"],
-                     buyer_password=message["buyer_password"],
-                     items_purchased=message["items_purchased"],
+                    (buyer_id=user.id,
+                     buyer_name=user.name,
+                     buyer_username=user.username,
+                     buyer_password=user.password,
+                     items_purchased=user.itemspurchased,
                      is_active="true")
-            else:
-                return AccountCreationRequest()
         except Exception as e:
             print(e)
         return AccountCreationRequest()
@@ -175,7 +156,8 @@ class BuyerActionService(onlineshopping_pb2_grpc.BuyerActionsServicer):
                 "image_3" : request.products.products[0].image_3,
                 "pub_date" : str(request.products.products[0].pub_date),
                 "type": "client",
-                "function": "addToCart"
+                "function": "addToCart",
+                "procs_active": self.procs_active,
             }
             self.sendToAtomicBroadcastServer(request)
             return AddToCartResponse(status="success", price="23")
@@ -297,7 +279,8 @@ class BuyerActionService(onlineshopping_pb2_grpc.BuyerActionsServicer):
                 "product" : request.product,
                 "quantity" : request.quantity,
                 "type": "client",
-                "function": "updateproductQuantity"
+                "function": "updateproductQuantity",
+                "procs_active": self.procs_active,
             }
             self.sendToAtomicBroadcastServer(request)
             return AddToCartResponse(status="success", price="23")
