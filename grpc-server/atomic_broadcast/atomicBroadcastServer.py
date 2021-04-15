@@ -38,8 +38,8 @@ class AtomicBroadcast():
                     print("updated global sequence to {number}".format(number=global_seq_num))
                     message = {"local_seq_num": local_seq_num, "data": message["data"], "sender_id": sender_id,
                                "global_seq_num": global_seq_num, "type": "sendMessage"}
-                    for i in ports:
-                        sock.sendto(json.dumps(message).encode(), (UDP_IP, i))
+                    for ip, i in zip(UDP_IP, ports):
+                        sock.sendto(json.dumps(message).encode(), (ip, i))
                     send[global_seq_num] = (message)
                     self.checkMessage(message, session, sock)
                 else:
