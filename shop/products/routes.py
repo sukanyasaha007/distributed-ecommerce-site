@@ -24,13 +24,13 @@ def categories():
 
 
 
-@app.route('/')
-def home():
-    resp_time = start_timer()
-    page = request.args.get('page',1, type=int)
-    products = Addproduct.query.filter(Addproduct.stock > 0).order_by(Addproduct.id.desc()).paginate(page=page, per_page=8)
-    stop_timer(resp_time, "getHomePage")
-    return render_template('products/index.html', products=products,brands=brands(),categories=categories())
+# @app.route('/')
+# def home():
+#     resp_time = start_timer()
+#     page = request.args.get('page',1, type=int)
+#     products = Addproduct.query.filter(Addproduct.stock > 0).order_by(Addproduct.id.desc()).paginate(page=page, per_page=8)
+#     stop_timer(resp_time, "getHomePage")
+#     return render_template('products/index.html', products=products,brands=brands(),categories=categories())
 
 @app.route('/result')
 def result():

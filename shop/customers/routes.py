@@ -145,12 +145,13 @@ def customer_register():
     return render_template('customer/register.html', form=form)
 @app.route('/')
 @auth_required_buyer
-def customer(authData):
+def home(authData):
     resp_time= start_timer()
     if authData["isAuthenticated"]:
         name= authData["userName"]
         # seller_data= Register.query.filter_by(username= name).first()
         # products= Addproduct.query.filter_by(seller= seller_data.name).all()
+        page = request.args.get('page',1, type=int)
         products = Addproduct.query.filter(Addproduct.stock > 0).order_by(Addproduct.id.desc()).paginate(page=page, per_page=8)
         print("check1",authData, products)
 
@@ -182,7 +183,7 @@ def customerLogin():
                                 email=user.buyer_email, password=user.buyer_password, country=user.buyer_country,
                                 city=user.buyer_city, contact=user.buyer_contact, address=user.buyer_address,
                                 zipcode=user.buyer_zipcode, itemspurchased=user.items_purchased)
-            token = jwt.encode({"user_name": user.buyer_name, "user_type": "seller", "user_id": user.buyer_id}, app.config["JWT_SECRET_KEY"], algorithm="HS256")
+            token = jwt.encode({"user_name": user.buyer_username, "user_type": "seller", "user_id": user.buyer_id}, app.config["JWT_SECRET_KEY"], algorithm="HS256")
             session["logged_in"]=True
             resp = make_response(MessageToJson(user))
             resp.set_cookie("authToken", token, httponly=True, samesite="Lax")
