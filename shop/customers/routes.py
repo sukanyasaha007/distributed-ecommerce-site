@@ -218,12 +218,12 @@ def updateshoppingcart():
 def get_order(authData):
     resp_time = start_timer()
     if authData["isAuthenticated"]:
-        buyer_data= Register.query.filter_by(username= authData["userName"]).first()
+        buyer_data = authData
         invoice = secrets.token_hex(5)
         id = random.randint(0, 100000)
         updateshoppingcart
         try:
-            order = CustomerOrder(id=id, invoice=invoice,customer_id=buyer_data.id,orders=session['Shoppingcart'])
+            order = CustomerOrder(id=id, invoice=invoice,customer_id=buyer_data["userId"],orders=session['Shoppingcart'])
             db.session.add(order)
             db.session.commit()
             session.pop('Shoppingcart')
@@ -239,14 +239,13 @@ def get_order(authData):
 
 @app.route('/orders/<invoice>')
 @auth_required_buyer
-def orders(invoice):
+def orders(authData, invoice):
     resp_time = start_timer()
-    if current_user.is_authenticated:
+    if authData["isAuthenticated"]:
         grandTotal = 0
         subTotal = 0
-        customer_id = current_user.id
-        customer = Register.query.filter_by(id=customer_id).first()
-        orders = CustomerOrder.query.filter_by(customer_id=customer_id, invoice=invoice).order_by(CustomerOrder.id.desc()).first()
+        customer_id = authData["userId"]
+        customer_name = authData["userName"]
         for _key, product in orders.orders.items():
             discount = (product['discount']/100) * float(product['price'])
             subTotal += float(product['price']) * int(product['quantity'])
@@ -256,18 +255,18 @@ def orders(invoice):
             stop_timer(resp_time, "getFinalOrder")
     else:
         return redirect(url_for('customerLogin'))
-    return render_template('customer/order.html', invoice=invoice, tax=tax,subTotal=subTotal,grandTotal=grandTotal,customer=customer,orders=orders)
+    return render_template('customer/order.html', invoice=invoice, tax=tax,subTotal=subTotal,grandTotal=grandTotal,customer=customer_name,orders=orders)
 
 @app.route('/displayorders')
-@login_required
-def displayOrders():
+@auth_required_buyer
+def displayOrders(authData):
     resp_time = start_timer()
-    if current_user.is_authenticated:
+    if authData["isAuthenticated"]:
         sellers = []
         grandTotal = 0
         subTotal = 0
-        customer_id = current_user.id
-        customer = Register.query.filter_by(id = customer_id).first()
+        customer_id = authData["userId"]
+        customer = authData["userName"]
         orders = CustomerOrder.query.filter_by(customer_id = customer_id)
         finalOrders = []
         if(orders.count() > 0):
@@ -294,14 +293,14 @@ def displayOrders():
 
 
 @app.route('/get_pdf/<invoice>', methods=['POST'])
-@login_required
-def get_pdf(invoice):
-    if current_user.is_authenticated:
+@auth_required_buyer
+def get_pdf(authData, invoice):
+    if authData["isAuthenticated"]:
         grandTotal = 0
         subTotal = 0
-        customer_id = current_user.id
+        customer_id = authData["userId"]
         if request.method =="POST":
-            customer = Register.query.filter_by(id=customer_id).first()
+            customer = authData["userName"]
             orders = CustomerOrder.query.filter_by(customer_id=customer_id, invoice=invoice).order_by(CustomerOrder.id.desc()).first()
             for _key, product in orders.orders.items():
                 discount = (product['discount']/100) * float(product['price'])
