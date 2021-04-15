@@ -19,7 +19,7 @@ from shop.grpc_server.onlineshopping_pb2 import AccountCreationRequest, AccountL
 from flask import request
 from shop import grpc_client
 import jwt
-
+from ..products.routes import brands, categories
 buplishable_key ='pk_test_51IN5nDCVZ5Yf06wRG9BLSKuBUaUqXKWKxbQPjAtHcsYdZgY0NiTG0aXIf25Ll29ItyhvnxjBa1FSUJPCo107MmCD00nkqBkcID'
 stripe.api_key ='sk_test_51IN5nDCVZ5Yf06wROWN3sRW7aVEhhCfo3obH4jNrU1MuzrOVeLS03hIwbs3UHOcL0v356Z01J1eP8rpcOZT6tQjF00HLVt218C'
 
@@ -36,7 +36,7 @@ def auth_required_buyer(fn):
         if authToken:
             try:
                 jwtData = jwt.decode(jwt=authToken, key=app.config["JWT_SECRET_KEY"], verify=True, algorithms="HS256")
-                # print(jwtData)
+                print("jwtData", jwtData)
                 authData["isAuthenticated"] = True
                 authData["userName"] = jwtData["user_name"]
 
@@ -87,11 +87,11 @@ def payment(authData):
 
 
 def makeTransaction(order):
-    # resp_time = start_timer()
-    # transport = zeep.Transport(cache=None)
-    # client = zeep.Client(soap_host+"/?WSDL", transport=transport)
-    # result = client.service.slow_request()
-    # stop_timer(resp_time, "soapServer")
+    resp_time = start_timer()
+    transport = zeep.Transport(cache=None)
+    client = zeep.Client(soap_host+"/?WSDL", transport=transport)
+    result = client.service.slow_request()
+    stop_timer(resp_time, "soapServer")
     return True
 
 @app.route('/thanks')
@@ -143,58 +143,71 @@ def customer_register():
             flash(f'Error in registering for {form.name.data}. Try again', 'danger')
             return redirect(url_for('customerRegister'))
     return render_template('customer/register.html', form=form)
+# @app.route('/')
+# @auth_required_buyer
+# def customer(authData):
+#     resp_time= start_timer()
+#     if authData["isAuthenticated"]:
+#         name= authData["userName"]
+#         seller_data= Register.query.filter_by(username= name).first()
+#         products= Addproduct.query.filter_by(seller= seller_data.name).all()
+#     # print(name, products)
+#     # products = Addproduct.query.all()
+#         stop_timer(resp_time, "buyer_landing_page_loading")
+#         print("Inside customer func")
+#         return redirect(url_for("home", title='Customer page',products=products))
+#     else:
+#         return redirect(url_for("customer_login_page"))
+@app.route('/')
+@auth_required_buyer
+def home(authData):
+    resp_time = start_timer()
+    page = request.args.get('page',1, type=int)
+    if authData["isAuthenticated"]:
+        name= authData["userName"]
+        seller_data= Register.query.filter_by(username= name).first()
+        # products= Addproduct.query.filter_by(seller= seller_data.name).all()
+        products = Addproduct.query.filter(Addproduct.stock > 0).order_by(Addproduct.id.desc()).paginate(page=page, per_page=8)
+        print("check1",name, products)    
+        stop_timer(resp_time, "getHomePage")
+        return render_template('products/index.html', products=products,brands=brands(),categories=categories())
+    else:
+        return redirect(url_for("customer_login_page"))
 
+@app.route('/customer/login', methods=['GET'])
+def customer_login_page():
+    print("Inside customer login page func")
+    return render_template('customer/login.html',title='Login page')
 
-@app.route('/customer/login', methods=['GET','POST'])
+@app.route('/customer/login', methods=['POST'])
 def customerLogin():
     resp_time = start_timer()
     # form = CustomerLoginFrom()
-    print("check 1", request.args.get("email"), request.args.get("password"))
-
     try:
-        if len(request.args.get("email")) and len(request.args.get("password")):
-            
-            input_request = AccountLoginRequest(buyer_username=request.args.get("email"), buyer_password=request.args.get("password"))
-            # input_request = AccountLoginRequest(buyer_username=form.email.data, buyer_password=form.password.data)
-            # user = Register.query.filter_by(email=form.email.data).first()
-            print("check 2", input_request)
+        if len(request.json["email"]) and len(request.json["password"]):
+            input_request = AccountLoginRequest(buyer_username=request.json["email"], buyer_password=request.json["password"])
             user = grpc_client.login(input_request)
-            print("check3", user)
+            print("check 4", user)
             if user.buyer_username == '' or user== None:
                 print("Invalid userid or password")
                 return jsonify({'message': "Invalid userid or password"}), 401
-            
+            print("I am inside customer login")
             newUser = Register(id=user.buyer_id, name=user.buyer_name, username=user.buyer_username,
                                 email=user.buyer_email, password=user.buyer_password, country=user.buyer_country,
                                 city=user.buyer_city, contact=user.buyer_contact, address=user.buyer_address,
                                 zipcode=user.buyer_zipcode, itemspurchased=user.items_purchased)
-            print("I am inside customer login")
-            stop_timer(resp_time, "buyer_login")
-            # if user.is_active == "true":
-            #     login_user(newUser)
-            #     flash('You are login now!', 'success')
-            #     stop_timer(resp_time, "buyerLogin")
-            #     return redirect(url_for('home'))
-            token = jwt.encode({"user_name": user.buyer_username, "user_type": "seller"}, app.config["JWT_SECRET_KEY"], algorithm="HS256")
+            token = jwt.encode({"user_name": user.buyer_name, "user_type": "seller"}, app.config["JWT_SECRET_KEY"], algorithm="HS256")
             session["logged_in"]=True
-            # if user.is_active == "true":
-            #     flash('You are logged in now!', 'success')
-            #     login_user(newUser)
-            #     stop_timer(resp_time, "adminLogin")
             resp = make_response(MessageToJson(user))
             resp.set_cookie("authToken", token, httponly=True, samesite="Lax")
-            # return resp
+            stop_timer(resp_time, "buyer_login")
             return resp;
-            # else:
-            #     flash('Incorrect email and password', 'danger')
-            #     return redirect(url_for('customerLogin'))
         else:
             flash('Incorrect email and password', 'danger')
-            return render_template('customer/login.html')
+            return jsonify({'test': 123}), 401
     except Exception as e:
         print(e)
-    # return jsonify({"message": "Something went wrong"}), 500
-    return render_template('customer/login.html')
+        return jsonify({"message": "Something went wrong"}), 500
 
 
 @app.route('/customer/logout')
@@ -217,7 +230,6 @@ def updateshoppingcart():
 def get_order(authData):
     resp_time = start_timer()
     if authData["isAuthenticated"]:
-        # customer_id = current_user.id
         buyer_data= Register.query.filter_by(username= authData["userName"]).first()
         invoice = secrets.token_hex(5)
         id = random.randint(0, 100000)
