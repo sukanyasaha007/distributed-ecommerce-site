@@ -1,11 +1,39 @@
 from flask import render_template, session, request, redirect, url_for, flash, current_app
 from shop import db, app, start_timer, stop_timer
 from shop.products.routes import brands, categories
+from ..customers.model import Register
+from ..products.models import Addproduct
 from flask_login import current_user
-from shop.grpc_server.onlineshopping_pb2 import SearchProductRequest, AddToCartRequest, UpdateproductQuantity, GetCartRequest
+from shop.grpc_server.onlineshopping_pb2 import SearchProductRequest, AddToCartRequest, UpdateproductQuantity, GetCartRequest, GetCartRequestProd
 from shop.products.models import cart
 from shop import grpc_client
+import jwt
 
+def auth_required_buyer(fn):
+    def decorated(**kwargs):
+        print("Inside Auth Required")
+        authToken = request.cookies.get("authToken")
+        authData = {
+            "isAuthenticated": False,
+            "userName": None,
+
+        }
+
+        if authToken:
+            try:
+                jwtData = jwt.decode(jwt=authToken, key=app.config["JWT_SECRET_KEY"], verify=True, algorithms="HS256")
+                # print(jwtData)
+                authData["isAuthenticated"] = True
+                authData["userName"] = jwtData["user_name"]
+
+            except Exception as e:
+                print("jwt varification failed: ", e)
+        else:
+            print("No token found")
+        return fn(authData, **kwargs)
+    decorated.__name__ = fn.__name__
+    return decorated
+    
 
 def MagerDicts(dict1, dict2):
     if isinstance(dict1, list) and isinstance(dict2, list):
@@ -15,37 +43,53 @@ def MagerDicts(dict1, dict2):
 
 
 @app.route('/addcart', methods=['POST'])
-def AddCart():
+@auth_required_buyer
+def AddCart(authData):
     try:
+        if authData["isAuthenticated"]:
+            buyer_data= Register.query.filter_by(username= authData["userName"]).first()
         resp_time = start_timer()
         product_id = request.form.get('product_id')
+        print("Inside Addcart",buyer_data.username, "\n", product_id)
         quantity = int(request.form.get('quantity'))
         color = request.form.get('colors')
         print(product_id)
-        item = SearchProductRequest(product=product_id)
-        response = grpc_client.search(item)
-        product = response.products
+        # item = SearchProductRequest(product=str(product_id))
+        # response = grpc_client.search(item)
+        product = Addproduct.query.filter_by(id=product_id).first()
+        # product = response.products
+        # print("check",item, response)
         if request.method == "POST":
-            DictItems = {
-                product_id: {'name': product[0].name, 'price': float(product[0].price), 'discount': product[0].discount,
-                             'color': color, 'quantity': quantity, 'image': product[0].image_1,
-                             'colors': product[0].colors}}
-            if 'Shoppingcart' in session:
-                print(session['Shoppingcart'])
-                if product_id in session['Shoppingcart']:
-                    for key, item in session['Shoppingcart'].items():
-                        if int(key) == int(product_id):
-                            grpc_client.updateproductQuantity(UpdateproductQuantity(customer=current_user.id,
-                                                              product=str(product_id),
-                                                                                    quantity=int(item['quantity'])+1))
-                            session.modified = True
-                            item['quantity'] += 1
-                else:
-                    session['Shoppingcart'] = MagerDicts(session['Shoppingcart'], DictItems)
-                    grpc_client.addToCart(AddToCartRequest(customerId=str(current_user.id), products=response))
-                    return redirect(request.referrer)
+            # DictItems = {
+                # product_id: {'name': product[0].name, 'price': float(product[0].price), 'discount': product[0].discount,
+                #              'color': color, 'quantity': quantity, 'image': product[0].image_1,
+                #              'colors': product[0].colors}}
+            DictItems = {product_id:{'name':product.name,'price':float(product.price),
+            'discount':product.discount,'color':color,'quantity':quantity,
+            'image':product.image_1, 'colors':product.colors}}
+            print("check", DictItems)
+            # shoppingCart = cart(id=id, invoice=invoice,customer_id=buyer_data.id,orders=session['Shoppingcart'])
+            existing = grpc_client.getFromcartProd(GetCartRequestProd(customerId=str(buyer_data.id), productId=str(product_id)))
+            if len(existing.products) != 0:
+                grpc_client.updateproductQuantity(UpdateproductQuantity(customer=buyer_data.id,
+                                                                product=str(product_id),
+                                                                                        quantity=int(quantity+1)))
+            # if 'Shoppingcart' in session:
+            #     print(session['Shoppingcart'])
+            #     if product_id in session['Shoppingcart']:
+            #         for key, item in session['Shoppingcart'].items():
+            #             if int(key) == int(product_id):
+            #                 grpc_client.updateproductQuantity(UpdateproductQuantity(customer=buyer_data.id,
+            #                                                   product=str(product_id),
+            #                                                                         quantity=int(item['quantity'])+1))
+            #                 session.modified = True
+            #                 item['quantity'] += 1
+            #     else:
+            #         session['Shoppingcart'] = MagerDicts(session['Shoppingcart'], DictItems)
+            #         grpc_client.addToCart(AddToCartRequest(customerId=str(buyer_data.id), products=product))
+            #         return redirect(request.referrer)
             else:
-                res = grpc_client.addToCart(AddToCartRequest(customerId=str(current_user.id), products=response))
+                res = grpc_client.addToCart(AddToCartRequest(customerId=str(buyer_data.id), products=product))
                 print(res.status)
                 session['Shoppingcart'] = DictItems
                 stop_timer(resp_time, "addTocart")
@@ -58,9 +102,12 @@ def AddCart():
 
 
 @app.route('/carts')
-def getCart():
+@auth_required_buyer
+def getCart(authData):
     resp_time = start_timer()
-    existing = grpc_client.getFromcart(GetCartRequest(customerId=str(current_user.id)))
+    if authData["isAuthenticated"]:
+        buyer_data= Register.query.filter_by(username= authData["userName"]).first()
+    existing = grpc_client.getFromcart(GetCartRequest(customerId=str(buyer_data.id)))
     print("cart contents -> ", existing)
     prd = {}
     subtotal = 0
@@ -92,11 +139,15 @@ def getCart():
 
 
 @app.route('/updatecart/<int:code>', methods=['POST'])
-def updatecart(code):
+@auth_required_buyer
+def updatecart(authData):
     resp_time = start_timer()
     if 'Shoppingcart' not in session or len(session['Shoppingcart']) <= 0:
         return redirect(url_for('home'))
     if request.method == "POST":
+        if authData["isAuthenticated"]:
+            buyer_data= Register.query.filter_by(username= authData["userName"]).first()
+    
         quantity = request.form.get('quantity')
         color = request.form.get('color')
         try:
@@ -108,7 +159,7 @@ def updatecart(code):
                     product = response.products
                     print(product, quantity)
                     if(int(product[0].stock) > int(quantity)):
-                        grpc_client.updateproductQuantity(UpdateproductQuantity(customer=current_user.id,
+                        grpc_client.updateproductQuantity(UpdateproductQuantity(customer=buyer_data.id,
                                                                                 product=str(key),
                                                                                 quantity=int(quantity)))
                         item['quantity'] = quantity
