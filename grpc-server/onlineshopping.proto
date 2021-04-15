@@ -81,6 +81,11 @@ message GetCartRequest {
      string customerId = 1;
 }
 
+message GetCartRequestProd {
+     string customerId = 1;
+     string productId = 2;
+}
+
 message AddToCartResponse {
      string status = 1;
      string price = 2;
@@ -93,6 +98,7 @@ service BuyerActions {
     rpc getProducts (GetProduct) returns (SearchProductResponse);
     rpc addToCart (AddToCartRequest) returns (AddToCartResponse);
     rpc getFromcart (GetCartRequest) returns (SearchProductResponse);
+    rpc getFromcartProd (GetCartRequestProd) returns (SearchProductResponse);
     rpc getProductsBySearchword (SearchProductRequestByDesc) returns (SearchProductResponse);
     rpc updateproductQuantity (UpdateproductQuantity) returns (AddToCartResponse);
 }
