@@ -15,7 +15,6 @@ import time
 from google.protobuf.json_format import MessageToJson
 
 from shop.grpc_server.onlineshopping_pb2 import AccountCreationRequest, AccountLoginRequest
-
 from flask import request
 from shop import grpc_client
 import jwt
@@ -143,26 +142,28 @@ def customer_register():
             flash(f'Error in registering for {form.name.data}. Try again', 'danger')
             return redirect(url_for('customerRegister'))
     return render_template('customer/register.html', form=form)
-@app.route('/')
-@auth_required_buyer
-def customer(authData):
-    resp_time= start_timer()
-    if authData["isAuthenticated"]:
-        name= authData["userName"]
-        seller_data= Register.query.filter_by(username= name).first()
-        products= Addproduct.query.filter_by(seller= seller_data.name).all()
-    # print(name, products)
-    # products = Addproduct.query.all()
-        stop_timer(resp_time, "buyer_landing_page_loading")
-        print("Inside customer func")
-        return redirect(url_for("home", title='Customer page',products=products))
-    else:
-        return redirect(url_for("customer_login_page"))
+# @app.route('/')
+# @auth_required_buyer
+# def customer(authData):
+#     resp_time= start_timer()
+#     if authData["isAuthenticated"]:
+#         name= authData["userName"]
+#         seller_data= Register.query.filter_by(username= name).first()
+#         # products= Addproduct.query.filter_by(seller= seller_data.name).all()
+#         products = Addproduct.query.filter(Addproduct.stock > 0).order_by(Addproduct.id.desc()).paginate(page=page, per_page=8)
+#         print("check1",authData, products)
+#         stop_timer(resp_time, "getHomePage")
+#         return render_template('products/index.html', products=products,brands=brands(),categories=categories(), user=name)
+#     else:
+#         return redirect(url_for("customer_login_page"))
 
 @app.route('/customer/login', methods=['GET'])
 def customer_login_page():
     print("Inside customer login page func")
-    return render_template('customer/login.html',title='Login page')
+    if(request.cookies.get("authToken")):
+        return redirect(url_for('home'))
+    else:
+        return render_template('customer/login.html',title='Login page')
 
 @app.route('/customer/login', methods=['POST'])
 def customerLogin():
@@ -199,6 +200,7 @@ def customerLogin():
 
 @app.route('/customer/logout')
 def customer_logout():
+    resp.set_cookie('sessionID', '', expires=0)
     resp_time = start_timer()
     logout_user()
     session.clear()
