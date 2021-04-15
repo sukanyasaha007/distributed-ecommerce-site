@@ -177,7 +177,10 @@ def home(authData):
 @app.route('/customer/login', methods=['GET'])
 def customer_login_page():
     print("Inside customer login page func")
-    return render_template('customer/login.html',title='Login page')
+    if(request.cookies.get("authToken")):
+        return redirect(url_for('home'))
+    else:
+        return render_template('customer/login.html',title='Login page')
 
 @app.route('/customer/login', methods=['POST'])
 def customerLogin():
