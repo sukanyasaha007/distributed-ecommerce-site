@@ -8,7 +8,21 @@ from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 # engine = create_engine('mysql+pymysql://root:pass@host.docker.internal:3325/onlineshopping')
 # engine = create_engine('mysql+pymysql://root:my-secret-pw@host.docker.internal:3306/onlineshopping')
-engine = create_engine('mysql+pymysql://nmk:pass@35.238.64.48:3306/onlineshopping')
+try:
+    engine = create_engine('mysql+pymysql://nmk:pass@35.238.64.48:3306/onlineshopping',
+                           connect_args={'connect_timeout': 10})
+except Exception as e:
+    try:
+        engine = create_engine('mysql+pymysql://nmk:pass@34.67.182.67:3306/onlineshopping',
+                               connect_args={'connect_timeout': 10})
+    except Exception as e:
+        try:
+            engine = create_engine('mysql+pymysql://nmk:pass@35.197.69.106:3306/onlineshopping',
+                                   connect_args={'connect_timeout': 10})
+        except Exception as e:
+            engine = create_engine('mysql+pymysql://nmk:pass@35.185.208.232:3306/onlineshopping',
+                                   connect_args={'connect_timeout': 10})
+
 Base = declarative_base()
 DBSession = sessionmaker(bind=engine)
 
