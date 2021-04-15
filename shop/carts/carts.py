@@ -4,7 +4,8 @@ from shop.products.routes import brands, categories
 from ..customers.model import Register
 from ..products.models import Addproduct
 from flask_login import current_user
-from shop.grpc_server.onlineshopping_pb2 import SearchProductRequest, AddToCartRequest, UpdateproductQuantity, GetCartRequest, GetCartRequestProd
+from shop.grpc_server.onlineshopping_pb2 import SearchProductRequest, AddToCartRequest, UpdateproductQuantity, \
+    GetCartRequest, GetCartRequestProd, AccountLoginRequest, ProductDetails, SearchProductResponse
 from shop.products.models import cart
 from shop import grpc_client
 import jwt
@@ -16,15 +17,16 @@ def auth_required_buyer(fn):
         authData = {
             "isAuthenticated": False,
             "userName": None,
-
+            "userId": None
         }
 
         if authToken:
             try:
                 jwtData = jwt.decode(jwt=authToken, key=app.config["JWT_SECRET_KEY"], verify=True, algorithms="HS256")
-                # print(jwtData)
+                print("jwtData", jwtData)
                 authData["isAuthenticated"] = True
                 authData["userName"] = jwtData["user_name"]
+                authData["userId"] = jwtData["user_id"]
 
             except Exception as e:
                 print("jwt varification failed: ", e)
@@ -47,10 +49,11 @@ def MagerDicts(dict1, dict2):
 def AddCart(authData):
     try:
         if authData["isAuthenticated"]:
-            buyer_data= Register.query.filter_by(username= authData["userName"]).first()
+            print(authData)
+            buyer_data = authData
         resp_time = start_timer()
         product_id = request.form.get('product_id')
-        print("Inside Addcart",buyer_data.username, "\n", product_id)
+        print("Inside Addcart",buyer_data["userName"], "\n", product_id)
         quantity = int(request.form.get('quantity'))
         color = request.form.get('colors')
         print(product_id)
@@ -68,10 +71,10 @@ def AddCart(authData):
             'discount':product.discount,'color':color,'quantity':quantity,
             'image':product.image_1, 'colors':product.colors}}
             print("check", DictItems)
-            # shoppingCart = cart(id=id, invoice=invoice,customer_id=buyer_data.id,orders=session['Shoppingcart'])
-            existing = grpc_client.getFromcartProd(GetCartRequestProd(customerId=str(buyer_data.id), productId=str(product_id)))
-            if len(existing.products) != 0:
-                grpc_client.updateproductQuantity(UpdateproductQuantity(customer=buyer_data.id,
+            existing = grpc_client.getFromcartProd(GetCartRequestProd(customerId=str(buyer_data["userId"]), productId=str(product_id)))
+            print(existing)
+            if existing!= None and len(existing.products) != 0:
+                grpc_client.updateproductQuantity(UpdateproductQuantity(customer=buyer_data["userId"],
                                                                 product=str(product_id),
                                                                                         quantity=int(quantity+1)))
             # if 'Shoppingcart' in session:
@@ -89,7 +92,27 @@ def AddCart(authData):
             #         grpc_client.addToCart(AddToCartRequest(customerId=str(buyer_data.id), products=product))
             #         return redirect(request.referrer)
             else:
-                res = grpc_client.addToCart(AddToCartRequest(customerId=str(buyer_data.id), products=product))
+                productlistArray = []
+                productlist = ProductDetails()
+                productlist.name = product.name
+                productlist.id = product.id
+                productlist.price = str(product.price)
+                productlist.discount = int(product.discount)
+                productlist.stock = product.stock
+                productlist.colors = product.colors
+                productlist.desc = product.desc
+                productlist.pub_date = str(product.pub_date)
+                productlist.category_id = productlist.category_id
+                productlist.category = str(product.category.name)
+                productlist.brand_id = product.brand_id
+                productlist.brand = str(product.brand.name)
+                productlist.image_1 = product.image_1
+                productlist.image_2 = product.image_2
+                productlist.image_3 = product.image_3
+                productlist.condition = product.condition
+                productlistArray.append(productlist)
+                resprod = SearchProductResponse(products = productlistArray)
+                res = grpc_client.addToCart(AddToCartRequest(customerId=str(buyer_data["userId"]), products=resprod))
                 print(res.status)
                 session['Shoppingcart'] = DictItems
                 stop_timer(resp_time, "addTocart")
@@ -105,9 +128,12 @@ def AddCart(authData):
 @auth_required_buyer
 def getCart(authData):
     resp_time = start_timer()
+    buyer_data = None
+    print(authData)
     if authData["isAuthenticated"]:
-        buyer_data= Register.query.filter_by(username= authData["userName"]).first()
-    existing = grpc_client.getFromcart(GetCartRequest(customerId=str(buyer_data.id)))
+        print(authData)
+        buyer_data= authData
+    existing = grpc_client.getFromcart(GetCartRequest(customerId=str(buyer_data["userId"])))
     print("cart contents -> ", existing)
     prd = {}
     subtotal = 0

@@ -30,7 +30,7 @@ def auth_required_buyer(fn):
         authData = {
             "isAuthenticated": False,
             "userName": None,
-
+            "userId": None
         }
 
         if authToken:
@@ -39,6 +39,7 @@ def auth_required_buyer(fn):
                 print("jwtData", jwtData)
                 authData["isAuthenticated"] = True
                 authData["userName"] = jwtData["user_name"]
+                authData["userId"] = jwtData["user_id"]
 
             except Exception as e:
                 print("jwt varification failed: ", e)
@@ -165,10 +166,11 @@ def home(authData):
     page = request.args.get('page',1, type=int)
     if authData["isAuthenticated"]:
         name= authData["userName"]
-        seller_data= Register.query.filter_by(username= name).first()
+        # seller_data= Register.query.filter_by(username= name).first()
         # products= Addproduct.query.filter_by(seller= seller_data.name).all()
         products = Addproduct.query.filter(Addproduct.stock > 0).order_by(Addproduct.id.desc()).paginate(page=page, per_page=8)
         print("check1",authData, products)
+
         stop_timer(resp_time, "getHomePage")
         return render_template('products/index.html', products=products,brands=brands(),categories=categories(), user=name)
     else:
@@ -199,7 +201,7 @@ def customerLogin():
                                 email=user.buyer_email, password=user.buyer_password, country=user.buyer_country,
                                 city=user.buyer_city, contact=user.buyer_contact, address=user.buyer_address,
                                 zipcode=user.buyer_zipcode, itemspurchased=user.items_purchased)
-            token = jwt.encode({"user_name": user.buyer_name, "user_type": "seller"}, app.config["JWT_SECRET_KEY"], algorithm="HS256")
+            token = jwt.encode({"user_name": user.buyer_name, "user_type": "seller", "user_id": user.buyer_id}, app.config["JWT_SECRET_KEY"], algorithm="HS256")
             session["logged_in"]=True
             resp = make_response(MessageToJson(user))
             resp.set_cookie("authToken", token, httponly=True, samesite="Lax")

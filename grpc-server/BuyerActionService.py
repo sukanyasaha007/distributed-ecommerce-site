@@ -137,6 +137,7 @@ class BuyerActionService(onlineshopping_pb2_grpc.BuyerActionsServicer):
         return SearchProductResponse(products=json_docs)
 
     def addToCart(self, request, context):
+        self.health_check()
         session.commit()
         print(request)
         try:
