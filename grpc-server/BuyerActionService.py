@@ -110,31 +110,31 @@ class BuyerActionService(onlineshopping_pb2_grpc.BuyerActionsServicer):
 
 
 
-    # def search(self, request, context):
-    #     session.commit()
-    #     json_docs = []
-    #     print(request)
-    #     product = session.query(Addproduct).filter(Addproduct.id == request.product).first()
-    #     print(product)
-    #     json_docs.append(ProductDetails(
-    #     id = product.id,
-    #     name = product.name,
-    #     price = str(product.price),
-    #     discount = product.discount,
-    #     stock = product.stock,
-    #     colors = product.colors,
-    #     desc = product.desc,
-    #     pub_date = str(product.pub_date),
-    #     category_id = product.category_id,
-    #     category = product.category.name,
-    #     brand_id = product.brand_id,
-    #     brand = product.brand.name,
-    #     image_1 = product.image_1,
-    #     image_2 = product.image_2,
-    #     image_3 = product.image_3,
-    #     condition = product.condition
-    #     ))
-    #     return SearchProductResponse(products=json_docs)
+    def search(self, request, context):
+        session.commit()
+        json_docs = []
+        print(request)
+        product = session.query(Addproduct).filter(Addproduct.id == request.product).first()
+        print(product)
+        json_docs.append(ProductDetails(
+        id = product.id,
+        name = product.name,
+        price = str(product.price),
+        discount = product.discount,
+        stock = product.stock,
+        colors = product.colors,
+        desc = product.desc,
+        pub_date = str(product.pub_date),
+        category_id = product.category_id,
+        category = product.category.name,
+        brand_id = product.brand_id,
+        brand = product.brand.name,
+        image_1 = product.image_1,
+        image_2 = product.image_2,
+        image_3 = product.image_3,
+        condition = product.condition
+        ))
+        return SearchProductResponse(products=json_docs)
 
     def addToCart(self, request, context):
         session.commit()
@@ -246,6 +246,37 @@ class BuyerActionService(onlineshopping_pb2_grpc.BuyerActionsServicer):
         session.commit()
         products = session.query(cart).filter(cart.customer_id == int(request.customerId)).all()
         products1 = session.query(cart).all()
+        for pr in products:
+            print(pr.name)
+        listProducts = []
+        for product in products:
+            message = ProductDetails()
+            message.id = product.product_id
+            message.name = product.name
+            message.price = str(product.price)
+            message.discount = product.discount
+            message.stock = product.stock
+            message.colors = product.colors
+            message.desc = product.descp
+            message.pub_date = str(product.pub_date)
+            message.category_id = 123
+            message.category = "random"
+            message.brand_id = 123
+            message.brand = "random"
+            message.image_1 = product.image_1
+            message.image_2 = product.image_2
+            message.image_3 = product.image_3
+            message.condition = "new"
+            listProducts.append(message)
+
+        searchprodResponse = SearchProductResponse(products=listProducts)
+        return searchprodResponse
+
+    def getFromcartProd(self,  request, context):
+        print(request)
+        session.commit()
+        products = session.query(cart).filter(cart.customer_id == int(request.customerId) and 
+        cart.product_id == int(request.productId)).all()
         for pr in products:
             print(pr.name)
         listProducts = []

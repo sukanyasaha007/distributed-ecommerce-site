@@ -28,10 +28,11 @@ basedir = os.path.abspath(os.path.dirname(__file__))
 app = Flask(__name__)
 # app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:@localhost/onlineshopping'
 
-app.config['SQLALCHEMY_DATABASE_URI']= 'cockroachdb://admin:abc%40123@35.209.30.130:25262/onlineshopping?sslmode=disable'
-# app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get("MYSQL_CONNECTION_STRING")
+# app.config['SQLALCHEMY_DATABASE_URI']= 'cockroachdb://admin:abc%40123@35.209.30.130:25262/onlineshopping?sslmode=disable'
+app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get("MYSQL_CONNECTION_STRING")
 
-LATENCY_REPORT_PATH="../latencyreport.csv"
+# LATENCY_REPORT_PATH="../latencyreport.csv"
+# LATENCY_REPORT_PATH= "https://storage.googleapis.com/ds-assignment-storage/latencyreport.csv"
 
 # app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://nmk:pass@35.238.64.48:3306/onlineshopping'
 
@@ -66,8 +67,6 @@ login_manager.needs_refresh_message_category='danger'
 login_manager.login_message = u"Please login first"
 soap_host = ""
 #GRPC params
-# channel = grpc.secure_channel("grpc-server-vlhiisghja-uc.a.run.app:443", grpc.ssl_channel_credentials())
-# channel = grpc.insecure_channel("host.docker.internal:50051")
 channel = grpc.insecure_channel("[::]:50051")
 
 # channel = grpc.secure_channel("grpc-server-vlhiisghja-uc.a.run.app:443", grpc.ssl_channel_credentials())

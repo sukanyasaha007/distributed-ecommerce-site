@@ -44,6 +44,11 @@ class BuyerActionsStub(object):
                 request_serializer=onlineshopping__pb2.GetCartRequest.SerializeToString,
                 response_deserializer=onlineshopping__pb2.SearchProductResponse.FromString,
                 )
+        self.getFromcartProd = channel.unary_unary(
+                '/BuyerActions/getFromcartProd',
+                request_serializer=onlineshopping__pb2.GetCartRequestProd.SerializeToString,
+                response_deserializer=onlineshopping__pb2.SearchProductResponse.FromString,
+                )
         self.getProductsBySearchword = channel.unary_unary(
                 '/BuyerActions/getProductsBySearchword',
                 request_serializer=onlineshopping__pb2.SearchProductRequestByDesc.SerializeToString,
@@ -95,6 +100,12 @@ class BuyerActionsServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
+    def getFromcartProd(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
     def getProductsBySearchword(self, request, context):
         """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
@@ -138,6 +149,11 @@ def add_BuyerActionsServicer_to_server(servicer, server):
             'getFromcart': grpc.unary_unary_rpc_method_handler(
                     servicer.getFromcart,
                     request_deserializer=onlineshopping__pb2.GetCartRequest.FromString,
+                    response_serializer=onlineshopping__pb2.SearchProductResponse.SerializeToString,
+            ),
+            'getFromcartProd': grpc.unary_unary_rpc_method_handler(
+                    servicer.getFromcartProd,
+                    request_deserializer=onlineshopping__pb2.GetCartRequestProd.FromString,
                     response_serializer=onlineshopping__pb2.SearchProductResponse.SerializeToString,
             ),
             'getProductsBySearchword': grpc.unary_unary_rpc_method_handler(
@@ -258,6 +274,23 @@ class BuyerActions(object):
             metadata=None):
         return grpc.experimental.unary_unary(request, target, '/BuyerActions/getFromcart',
             onlineshopping__pb2.GetCartRequest.SerializeToString,
+            onlineshopping__pb2.SearchProductResponse.FromString,
+            options, channel_credentials,
+            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
+
+    @staticmethod
+    def getFromcartProd(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/BuyerActions/getFromcartProd',
+            onlineshopping__pb2.GetCartRequestProd.SerializeToString,
             onlineshopping__pb2.SearchProductResponse.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
