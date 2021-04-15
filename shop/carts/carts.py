@@ -74,9 +74,40 @@ def AddCart(authData):
             existing = grpc_client.getFromcartProd(GetCartRequestProd(customerId=str(buyer_data["userId"]), productId=str(product_id)))
             print(existing)
             if existing!= None and len(existing.products) != 0:
-                grpc_client.updateproductQuantity(UpdateproductQuantity(customer=buyer_data["userId"],
-                                                                product=str(product_id),
-                                                                                        quantity=int(quantity+1)))
+                found = False
+                for ex in existing.products:
+                    if(product_id == ex.id):
+                        found = True
+                        grpc_client.updateproductQuantity(UpdateproductQuantity(customer=buyer_data["userId"],
+                                                                        product=str(product_id),
+                                                                                                quantity=int(quantity+1)))
+                if(not found):
+                    print("heloooooooooo")
+                    session['Shoppingcart'] = MagerDicts(session['Shoppingcart'], DictItems)
+                    productlistArray = []
+                    productlist = ProductDetails()
+                    productlist.name = product.name
+                    productlist.id = product.id
+                    productlist.price = str(product.price)
+                    productlist.discount = int(product.discount)
+                    productlist.stock = product.stock
+                    productlist.colors = product.colors
+                    productlist.desc = product.desc
+                    productlist.pub_date = str(product.pub_date)
+                    productlist.category_id = productlist.category_id
+                    productlist.category = str(product.category.name)
+                    productlist.brand_id = product.brand_id
+                    productlist.brand = str(product.brand.name)
+                    productlist.image_1 = product.image_1
+                    productlist.image_2 = product.image_2
+                    productlist.image_3 = product.image_3
+                    productlist.condition = "new"
+                    productlistArray.append(productlist)
+                    resprod = SearchProductResponse(products=productlistArray)
+                    res = grpc_client.addToCart(
+                        AddToCartRequest(customerId=str(buyer_data["userId"]), products=resprod))
+                    return redirect(request.referrer)
+
             # if 'Shoppingcart' in session:
             #     print(session['Shoppingcart'])
             #     if product_id in session['Shoppingcart']:
@@ -109,7 +140,7 @@ def AddCart(authData):
                 productlist.image_1 = product.image_1
                 productlist.image_2 = product.image_2
                 productlist.image_3 = product.image_3
-                productlist.condition = product.condition
+                productlist.condition = "new"
                 productlistArray.append(productlist)
                 resprod = SearchProductResponse(products = productlistArray)
                 res = grpc_client.addToCart(AddToCartRequest(customerId=str(buyer_data["userId"]), products=resprod))
@@ -166,26 +197,27 @@ def getCart(authData):
 
 @app.route('/updatecart/<int:code>', methods=['POST'])
 @auth_required_buyer
-def updatecart(authData):
+def updatecart(authData, code):
+    print(code)
     resp_time = start_timer()
     if 'Shoppingcart' not in session or len(session['Shoppingcart']) <= 0:
         return redirect(url_for('home'))
+    buyer_data = None
+    print(authData)
     if request.method == "POST":
         if authData["isAuthenticated"]:
-            buyer_data= Register.query.filter_by(username= authData["userName"]).first()
-    
+            buyer_data = authData
+
         quantity = request.form.get('quantity')
         color = request.form.get('color')
         try:
             session.modified = True
             for key, item in session['Shoppingcart'].items():
                 if int(key) == code:
-                    detail = SearchProductRequest(product=str(key))
-                    response = grpc_client.search(detail)
-                    product = response.products
+                    product = Addproduct.query.filter_by(id=str(key)).first()
                     print(product, quantity)
-                    if(int(product[0].stock) > int(quantity)):
-                        grpc_client.updateproductQuantity(UpdateproductQuantity(customer=buyer_data.id,
+                    if(int(product.stock) > int(quantity)):
+                        grpc_client.updateproductQuantity(UpdateproductQuantity(customer=buyer_data["userId"],
                                                                                 product=str(key),
                                                                                 quantity=int(quantity)))
                         item['quantity'] = quantity
@@ -195,21 +227,26 @@ def updatecart(authData):
                         flash('Requested quantity not present in stock','danger')
                     stop_timer(resp_time, "updatedCart")
                     return redirect(url_for('getCart'))
+                else:
+                    print("adding")
         except Exception as e:
             print(e)
             return redirect(url_for('getCart'))
 
 
 @app.route('/deleteitem/<int:id>')
-def deleteitem(id):
+@auth_required_buyer
+def deleteitem(authData, id):
     resp_time = start_timer()
+    if authData["isAuthenticated"]:
+        buyer_data = authData
     if 'Shoppingcart' not in session or len(session['Shoppingcart']) <= 0:
         return redirect(url_for('home'))
     try:
         session.modified = True
         for key, item in session['Shoppingcart'].items():
             if int(key) == id:
-                grpc_client.updateproductQuantity(UpdateproductQuantity(customer=current_user.id,
+                grpc_client.updateproductQuantity(UpdateproductQuantity(customer=buyer_data["userId"],
                                                                         product=str(id), quantity=-99999))
                 session['Shoppingcart'].pop(key, None)
                 stop_timer(resp_time, "deleteItem")
@@ -220,11 +257,14 @@ def deleteitem(id):
 
 
 @app.route('/clearcart')
-def clearcart():
+@auth_required_buyer
+def clearcart(authData):
     try:
         resp_time = start_timer()
-        print(current_user.id)
-        grpc_client.updateproductQuantity(UpdateproductQuantity(customer=current_user.id,
+        if authData["isAuthenticated"]:
+            buyer_data = authData
+        print(buyer_data["userId"])
+        grpc_client.updateproductQuantity(UpdateproductQuantity(customer=buyer_data["userId"],
                                                                 product="387583568568", quantity=0))
         stop_timer(resp_time, "clearcart")
         session.pop('Shoppingcart', None)

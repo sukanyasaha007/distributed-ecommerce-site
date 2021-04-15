@@ -243,6 +243,7 @@ class BuyerActionService(onlineshopping_pb2_grpc.BuyerActionsServicer):
         return searchprodResponse
 
     def getFromcart(self,  request, context):
+        self.health_check()
         print(request)
         session.commit()
         products = session.query(cart).filter(cart.customer_id == int(request.customerId)).all()
@@ -274,6 +275,7 @@ class BuyerActionService(onlineshopping_pb2_grpc.BuyerActionsServicer):
         return searchprodResponse
 
     def getFromcartProd(self,  request, context):
+        self.health_check()
         print(request)
         session.commit()
         products = session.query(cart).filter(cart.customer_id == int(request.customerId) and 
@@ -305,6 +307,7 @@ class BuyerActionService(onlineshopping_pb2_grpc.BuyerActionsServicer):
         return searchprodResponse
 
     def updateproductQuantity(self,  request, context):
+        self.health_check()
         try:
             request = {
                 "customer" : request.customer,
