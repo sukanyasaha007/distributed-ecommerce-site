@@ -198,14 +198,14 @@ def customerLogin():
         return jsonify({"message": "Something went wrong"}), 500
 
 
-@app.route('/customer/logout')
-def customer_logout():
-    resp.set_cookie('sessionID', '', expires=0)
-    resp_time = start_timer()
-    logout_user()
-    session.clear()
-    stop_timer(resp_time, "userLogout")
-    return redirect(url_for('home'))
+@app.route('/customer/logout', methods=["DELETE"])
+@auth_required_buyer
+def customer_logout(authData):
+    if authData["isAuthenticated"]:
+        resp = make_response()
+        resp.set_cookie("authToken", expires=0)
+        return resp;
+    return jsonify({'message': "User not logged in"}), 400
 
 def updateshoppingcart():
     for key, shopping in session['Shoppingcart'].items():
