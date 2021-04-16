@@ -83,7 +83,7 @@ def AddCart(authData):
                                                                                                 quantity=int(quantity+1)))
                 if(not found):
                     print("heloooooooooo")
-                    session['Shoppingcart'] = MagerDicts(session['Shoppingcart'], DictItems)
+                    # session['Shoppingcart'] = MagerDicts(session['Shoppingcart'], DictItems)
                     productlistArray = []
                     productlist = ProductDetails()
                     productlist.name = product.name
@@ -104,8 +104,10 @@ def AddCart(authData):
                     productlist.condition = "new"
                     productlistArray.append(productlist)
                     resprod = SearchProductResponse(products=productlistArray)
+                    print("Yoooooooooooo")
                     res = grpc_client.addToCart(
                         AddToCartRequest(customerId=str(buyer_data["userId"]), products=resprod))
+                    print(res)
                     return redirect(request.referrer)
 
             # if 'Shoppingcart' in session:
@@ -145,7 +147,7 @@ def AddCart(authData):
                 resprod = SearchProductResponse(products = productlistArray)
                 res = grpc_client.addToCart(AddToCartRequest(customerId=str(buyer_data["userId"]), products=resprod))
                 print(res.status)
-                session['Shoppingcart'] = DictItems
+                # session['Shoppingcart'] = DictItems
                 stop_timer(resp_time, "addTocart")
                 return redirect(request.referrer)
 
@@ -167,6 +169,7 @@ def getCart(authData):
     existing = grpc_client.getFromcart(GetCartRequest(customerId=str(buyer_data["userId"])))
     print("cart contents -> ", existing)
     prd = {}
+    cartDisplay = {}
     subtotal = 0
     grandtotal = 0
     if len(existing.products) != 0:
@@ -179,7 +182,7 @@ def getCart(authData):
             subtotal -= discount
             tax = ("%.2f" % (.06 * float(subtotal)))
             grandtotal = float("%.2f" % (1.06 * subtotal))
-        session['Shoppingcart'] = prd
+        cartDisplay['Shoppingcart'] = prd
     else:
         return redirect(url_for('home'))
     # if 'Shoppingcart' not in session or len(session['Shoppingcart']) <= 0:
@@ -190,9 +193,10 @@ def getCart(authData):
     #     subtotal -= discount
     #     tax = ("%.2f" % (.06 * float(subtotal)))
     #     grandtotal = float("%.2f" % (1.06 * subtotal))
+    print(cartDisplay)
     stop_timer(resp_time, "getcart")
     return render_template('products/carts.html', tax=tax, grandtotal=grandtotal, brands=brands(),
-                           categories=categories())
+                           categories=categories(), cart=cartDisplay['Shoppingcart'])
 
 
 @app.route('/updatecart/<int:code>', methods=['POST'])
@@ -200,19 +204,32 @@ def getCart(authData):
 def updatecart(authData, code):
     print(code)
     resp_time = start_timer()
-    if 'Shoppingcart' not in session or len(session['Shoppingcart']) <= 0:
-        return redirect(url_for('home'))
     buyer_data = None
+    cartDisplay = {}
+    prd ={}
     print(authData)
     if request.method == "POST":
         if authData["isAuthenticated"]:
             buyer_data = authData
 
+        existing = grpc_client.getFromcart(GetCartRequest(customerId=str(buyer_data["userId"])))
+
+        if len(existing.products) == 0:
+            return redirect(url_for('home'))
+
+        for i in existing.products:
+            prd[i.id] = {'color': i.colors, 'colors': i.colors,
+                         'discount': i.discount, 'image': i.image_1, 'name': i.name,
+                 'price': float(i.price), 'quantity': i.stock}
+        cartDisplay['Shoppingcart'] = prd
+
+
         quantity = request.form.get('quantity')
         color = request.form.get('color')
+
         try:
             session.modified = True
-            for key, item in session['Shoppingcart'].items():
+            for key, item in cartDisplay['Shoppingcart'].items():
                 if int(key) == code:
                     product = Addproduct.query.filter_by(id=str(key)).first()
                     print(product, quantity)
@@ -238,17 +255,28 @@ def updatecart(authData, code):
 @auth_required_buyer
 def deleteitem(authData, id):
     resp_time = start_timer()
+    cartDisplay = {}
+    prd = {}
     if authData["isAuthenticated"]:
         buyer_data = authData
-    if 'Shoppingcart' not in session or len(session['Shoppingcart']) <= 0:
+
+    existing = grpc_client.getFromcart(GetCartRequest(customerId=str(buyer_data["userId"])))
+
+    if len(existing.products) == 0:
         return redirect(url_for('home'))
+
+    for i in existing.products:
+        prd[i.id] = {'color': i.colors, 'colors': i.colors,
+                     'discount': i.discount, 'image': i.image_1, 'name': i.name,
+                     'price': float(i.price), 'quantity': i.stock}
+    cartDisplay['Shoppingcart'] = prd
+
     try:
         session.modified = True
-        for key, item in session['Shoppingcart'].items():
+        for key, item in cartDisplay['Shoppingcart'].items():
             if int(key) == id:
                 grpc_client.updateproductQuantity(UpdateproductQuantity(customer=buyer_data["userId"],
                                                                         product=str(id), quantity=-99999))
-                session['Shoppingcart'].pop(key, None)
                 stop_timer(resp_time, "deleteItem")
                 return redirect(url_for('getCart'))
     except Exception as e:
@@ -267,7 +295,6 @@ def clearcart(authData):
         grpc_client.updateproductQuantity(UpdateproductQuantity(customer=buyer_data["userId"],
                                                                 product="387583568568", quantity=0))
         stop_timer(resp_time, "clearcart")
-        session.pop('Shoppingcart', None)
         return redirect(url_for('home'))
     except Exception as e:
         print(e)

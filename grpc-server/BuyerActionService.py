@@ -28,6 +28,7 @@ class BuyerActionService(onlineshopping_pb2_grpc.BuyerActionsServicer):
 
     def health_check(self):
         UNHEALTHY_UPD_PORTS.clear()
+        print("Healthyyyyyyyyy")
         active_servers = 0
         for ip, port in zip(UDP_IP, UPD_PORTS):
             print("UDP target IP: %s" % ip)
@@ -42,7 +43,7 @@ class BuyerActionService(onlineshopping_pb2_grpc.BuyerActionsServicer):
                     print(hostname, 'is down!')
                     UNHEALTHY_UPD_PORTS.append(port)
             except Exception as e:
-                print(e)
+                print("Yoooooooo", e)
         self.procs_active = active_servers
 
     def sendToAtomicBroadcastServer(self, request):
@@ -137,9 +138,10 @@ class BuyerActionService(onlineshopping_pb2_grpc.BuyerActionsServicer):
         return SearchProductResponse(products=json_docs)
 
     def addToCart(self, request, context):
-        self.health_check()
+        print("Ypppppppppppp", request)
+        # self.health_check()
         session.commit()
-        print(request)
+        print("Ypppppppppppp", request)
         try:
             id = random.randint(0, 10000)
             request  = {

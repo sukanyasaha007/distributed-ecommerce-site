@@ -15,6 +15,9 @@ import time
 from google.protobuf.json_format import MessageToJson
 from ..products.routes import brands, categories
 from shop.grpc_server.onlineshopping_pb2 import AccountCreationRequest, AccountLoginRequest
+
+from shop.grpc_server.onlineshopping_pb2 import AccountCreationRequest, AccountLoginRequest, GetCartRequest
+
 from flask import request
 from shop import grpc_client
 import jwt
@@ -146,19 +149,25 @@ def customer_register():
 @app.route('/')
 @auth_required_buyer
 def home(authData):
-    resp_time= start_timer()
-    if authData["isAuthenticated"]:
-        name= authData["userName"]
-        # seller_data= Register.query.filter_by(username= name).first()
-        # products= Addproduct.query.filter_by(seller= seller_data.name).all()
-        page = request.args.get('page',1, type=int)
-        products = Addproduct.query.filter(Addproduct.stock > 0).order_by(Addproduct.id.desc()).paginate(page=page, per_page=8)
-        # print("check1",authData, products)
-
-        stop_timer(resp_time, "getHomePage")
-        return render_template('products/index.html', products=products,brands=brands(),categories=categories(), user=name)
+    resp_time = start_timer()
+    length_existing = 0
+    page = request.args.get('page',1, type=int)
+    # if authData["isAuthenticated"]:
+    name= authData["userName"]
+    # seller_data= Register.query.filter_by(username= name).first()
+    # products= Addproduct.query.filter_by(seller= seller_data.name).all()
+    products = Addproduct.query.filter(Addproduct.stock > 0).order_by(Addproduct.id.desc()).paginate(page=page, per_page=8)
+    print("check1",authData, products)
+    if(authData["userId"] != None):
+        existing = grpc_client.getFromcart(GetCartRequest(customerId=str(authData["userId"])))
+        length_existing = len(existing.products)
     else:
-        return redirect(url_for("customer_login_page"))
+        length_existing = 0
+    stop_timer(resp_time, "getHomePage")
+    return render_template('products/index.html', products=products,brands=brands(),categories=categories(), user=name,
+                           noItems=length_existing)
+    # else:
+    #     return redirect(url_for("customer_login_page"))
 
 @app.route('/customer/login', methods=['GET'])
 def customer_login_page():
