@@ -60,7 +60,7 @@ $("#login-form-buyer").submit(function(event) {
         contentType: "application/json; charset=utf-8",
         success: function() {
             console.log("Successful login");
-            window.location.href = "";
+            window.location.href = "/";
         },
         error: function() {
             alert("Unsuccessful login");

@@ -13,19 +13,18 @@ import stripe
 import zeep
 import time
 from google.protobuf.json_format import MessageToJson
-
+from ..products.routes import brands, categories
 from shop.grpc_server.onlineshopping_pb2 import AccountCreationRequest, AccountLoginRequest
-
 from flask import request
 from shop import grpc_client
 import jwt
-from ..products.routes import brands, categories
+
 buplishable_key ='pk_test_51IN5nDCVZ5Yf06wRG9BLSKuBUaUqXKWKxbQPjAtHcsYdZgY0NiTG0aXIf25Ll29ItyhvnxjBa1FSUJPCo107MmCD00nkqBkcID'
 stripe.api_key ='sk_test_51IN5nDCVZ5Yf06wROWN3sRW7aVEhhCfo3obH4jNrU1MuzrOVeLS03hIwbs3UHOcL0v356Z01J1eP8rpcOZT6tQjF00HLVt218C'
 
 def auth_required_buyer(fn):
     def decorated(**kwargs):
-        print("Inside Auth Required")
+        # print("Inside Auth Required")
         authToken = request.cookies.get("authToken")
         authData = {
             "isAuthenticated": False,
@@ -36,7 +35,7 @@ def auth_required_buyer(fn):
         if authToken:
             try:
                 jwtData = jwt.decode(jwt=authToken, key=app.config["JWT_SECRET_KEY"], verify=True, algorithms="HS256")
-                print("jwtData", jwtData)
+                # print("jwtData", jwtData)
                 authData["isAuthenticated"] = True
                 authData["userName"] = jwtData["user_name"]
                 authData["userId"] = jwtData["user_id"]
@@ -67,7 +66,7 @@ def payment(authData):
     #   currency='usd',
     # )
     buyer_data= Register.query.filter_by(username= authData["userName"]).first()
-    print("buyer_data.id", buyer_data.id)
+    # print("buyer_data.id", buyer_data.id)
     orders =  CustomerOrder.query.filter_by(customer_id = buyer_data.id,invoice=invoice).order_by(CustomerOrder.id.desc()).first()
     orders.status = 'Paid'
     db.session.commit()
@@ -144,32 +143,17 @@ def customer_register():
             flash(f'Error in registering for {form.name.data}. Try again', 'danger')
             return redirect(url_for('customerRegister'))
     return render_template('customer/register.html', form=form)
-# @app.route('/')
-# @auth_required_buyer
-# def customer(authData):
-#     resp_time= start_timer()
-#     if authData["isAuthenticated"]:
-#         name= authData["userName"]
-#         seller_data= Register.query.filter_by(username= name).first()
-#         products= Addproduct.query.filter_by(seller= seller_data.name).all()
-#     # print(name, products)
-#     # products = Addproduct.query.all()
-#         stop_timer(resp_time, "buyer_landing_page_loading")
-#         print("Inside customer func")
-#         return redirect(url_for("home", title='Customer page',products=products))
-#     else:
-#         return redirect(url_for("customer_login_page"))
 @app.route('/')
 @auth_required_buyer
 def home(authData):
-    resp_time = start_timer()
-    page = request.args.get('page',1, type=int)
+    resp_time= start_timer()
     if authData["isAuthenticated"]:
         name= authData["userName"]
         # seller_data= Register.query.filter_by(username= name).first()
         # products= Addproduct.query.filter_by(seller= seller_data.name).all()
+        page = request.args.get('page',1, type=int)
         products = Addproduct.query.filter(Addproduct.stock > 0).order_by(Addproduct.id.desc()).paginate(page=page, per_page=8)
-        print("check1",authData, products)
+        # print("check1",authData, products)
 
         stop_timer(resp_time, "getHomePage")
         return render_template('products/index.html', products=products,brands=brands(),categories=categories(), user=name)
@@ -179,10 +163,7 @@ def home(authData):
 @app.route('/customer/login', methods=['GET'])
 def customer_login_page():
     print("Inside customer login page func")
-    if(request.cookies.get("authToken")):
-        return redirect(url_for('home'))
-    else:
-        return render_template('customer/login.html',title='Login page')
+    return render_template('customer/login.html',title='Login page')
 
 @app.route('/customer/login', methods=['POST'])
 def customerLogin():
@@ -191,21 +172,23 @@ def customerLogin():
     try:
         if len(request.json["email"]) and len(request.json["password"]):
             input_request = AccountLoginRequest(buyer_username=request.json["email"], buyer_password=request.json["password"])
+            # print("check 2", input_request)
             user = grpc_client.login(input_request)
-            print("check 4", user)
+            # print("check 3", user)
             if user.buyer_username == '' or user== None:
                 print("Invalid userid or password")
                 return jsonify({'message': "Invalid userid or password"}), 401
-            print("I am inside customer login")
+            # print("I am inside customer login")
             newUser = Register(id=user.buyer_id, name=user.buyer_name, username=user.buyer_username,
                                 email=user.buyer_email, password=user.buyer_password, country=user.buyer_country,
                                 city=user.buyer_city, contact=user.buyer_contact, address=user.buyer_address,
                                 zipcode=user.buyer_zipcode, itemspurchased=user.items_purchased)
-            token = jwt.encode({"user_name": user.buyer_name, "user_type": "seller", "user_id": user.buyer_id}, app.config["JWT_SECRET_KEY"], algorithm="HS256")
+            token = jwt.encode({"user_name": user.buyer_username, "user_type": "seller", "user_id": user.buyer_id}, app.config["JWT_SECRET_KEY"], algorithm="HS256")
             session["logged_in"]=True
             resp = make_response(MessageToJson(user))
             resp.set_cookie("authToken", token, httponly=True, samesite="Lax")
             stop_timer(resp_time, "buyer_login")
+            # print("check 4", resp, token)
             return resp;
         else:
             flash('Incorrect email and password', 'danger')
@@ -239,9 +222,11 @@ def get_order(authData):
         buyer_data = authData
         invoice = secrets.token_hex(5)
         id = random.randint(0, 100000)
+        # print("session>>>>>>>",session['Shoppingcart'])
         updateshoppingcart
         try:
             order = CustomerOrder(id=id, invoice=invoice,customer_id=buyer_data["userId"],orders=session['Shoppingcart'])
+            print("order>>>>>>>>>>", order.invoice)
             db.session.add(order)
             db.session.commit()
             session.pop('Shoppingcart')
@@ -291,7 +276,7 @@ def displayOrders(authData):
             for k in orders:
                 for _key, product in k.orders.items():
                     soldproducts = SoldProducts.query.filter_by(product = product['name']).first()
-                    print(product['name'])
+                    # print(product['name'])
                     if soldproducts != None:
                         finalOrders.append(k)
                         sellers.append(soldproducts.name)
