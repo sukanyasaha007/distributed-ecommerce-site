@@ -43,7 +43,7 @@ class CustomerOrder(db.Model):
     invoice = db.Column(db.String(20), unique=True, nullable=False)
     status = db.Column(db.String(20), default='Pending', nullable=False)
     customer_id = db.Column(db.Integer, unique=False, nullable=False)
-    date_created = db.Column(db.DateTime, default=datetime.now(), nullable=False)
+    date_created = db.Column(db.DateTime, default=datetime.now().strftime("%Y-%m-%d"), nullable=False)
     orders = db.Column(JsonEcodedDict)
 
     def __repr__(self):
