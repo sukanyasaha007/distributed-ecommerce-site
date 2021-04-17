@@ -90,11 +90,11 @@ def payment(authData):
 
 
 def makeTransaction(order):
-    resp_time = start_timer()
-    transport = zeep.Transport(cache=None)
-    client = zeep.Client(soap_host+"/?WSDL", transport=transport)
-    result = client.service.slow_request()
-    stop_timer(resp_time, "soapServer")
+    # resp_time = start_timer()
+    # transport = zeep.Transport(cache=None)
+    # client = zeep.Client(soap_host+"/?WSDL", transport=transport)
+    # result = client.service.slow_request()
+    # stop_timer(resp_time, "soapServer")
     return True
 
 @app.route('/thanks')
@@ -157,7 +157,7 @@ def home(authData):
     # seller_data= Register.query.filter_by(username= name).first()
     # products= Addproduct.query.filter_by(seller= seller_data.name).all()
     products = Addproduct.query.filter(Addproduct.stock > 0).order_by(Addproduct.id.desc()).paginate(page=page, per_page=8)
-    print("check1",authData, products)
+    # print("check1",authData, products)
     if(authData["userId"] != None):
         existing = grpc_client.getFromcart(GetCartRequest(customerId=str(authData["userId"])))
         length_existing = len(existing.products)
@@ -171,7 +171,7 @@ def home(authData):
 
 @app.route('/customer/login', methods=['GET'])
 def customer_login_page():
-    print("Inside customer login page func")
+    # print("Inside customer login page func")
     return render_template('customer/login.html',title='Login page')
 
 @app.route('/customer/login', methods=['POST'])
@@ -185,7 +185,7 @@ def customerLogin():
             user = grpc_client.login(input_request)
             # print("check 3", user)
             if user.buyer_username == '' or user== None:
-                print("Invalid userid or password")
+                # print("Invalid userid or password")
                 return jsonify({'message': "Invalid userid or password"}), 401
             # print("I am inside customer login")
             newUser = Register(id=user.buyer_id, name=user.buyer_name, username=user.buyer_username,
@@ -231,14 +231,25 @@ def get_order(authData):
         buyer_data = authData
         invoice = secrets.token_hex(5)
         id = random.randint(0, 100000)
+        cartDisplay = {}
+        prd = {}
         # print("session>>>>>>>",session['Shoppingcart'])
         updateshoppingcart
         try:
-            order = CustomerOrder(id=id, invoice=invoice,customer_id=buyer_data["userId"],orders=session['Shoppingcart'])
-            print("order>>>>>>>>>>", order.invoice)
+            existing = grpc_client.getFromcart(GetCartRequest(customerId=str(buyer_data["userId"])))
+            if len(existing.products) == 0:
+                return redirect(url_for('home'))
+
+            for i in existing.products:
+                prd[i.id] = {'color': i.colors, 'colors': i.colors,
+                            'discount': i.discount, 'image': i.image_1, 'name': i.name,
+                            'price': float(i.price), 'quantity': i.stock}
+            cartDisplay['Shoppingcart'] = prd
+            order = CustomerOrder(id=id, invoice=invoice,customer_id=buyer_data["userId"],orders=cartDisplay['Shoppingcart'])
+            # print("order>>>>>>>>>>", order.invoice)
             db.session.add(order)
             db.session.commit()
-            session.pop('Shoppingcart')
+            # session.pop('Shoppingcart')
             flash('Your order has been sent successfully','success')
             stop_timer(resp_time, "getorder")
             return redirect(url_for('orders',invoice=invoice))
@@ -258,6 +269,9 @@ def orders(authData, invoice):
         subTotal = 0
         customer_id = authData["userId"]
         customer_name = authData["userName"]
+        # orders = CustomerOrder.query.filter_by(customer_id = customer_id).all()
+        orders= CustomerOrder.query.filter_by(customer_id=customer_id, invoice=invoice).order_by(CustomerOrder.id.desc()).first()
+        print("orders?????????????????????", orders)
         for _key, product in orders.orders.items():
             discount = (product['discount']/100) * float(product['price'])
             subTotal += float(product['price']) * int(product['quantity'])
