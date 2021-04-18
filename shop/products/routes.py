@@ -36,12 +36,12 @@ def categories():
 def result():
     resp_time = start_timer()
     searchword = request.args.get('q')
-    s = SearchProductRequestByDesc(searchword=searchword)
-    test = grpc_client.getProductsBySearchword(s)
-    for x in test.products: print(x)
-    # products = Addproduct.query.msearch(searchword, fields=['name','desc'] , limit=6)
+    # s = SearchProductRequestByDesc(searchword=searchword)
+    # test = grpc_client.getProductsBySearchword(s)
+    # for x in test.products: print(x)
+    products = Addproduct.query.msearch(searchword, fields=['name','desc'] , limit=6)
     stop_timer(resp_time, "searchProducts")
-    return render_template('products/result.html',products=test.products,brands=brands(),categories=categories())
+    return render_template('products/result.html',products=products,brands=brands(),categories=categories())
 
 def getAvgRatingCount(name):
     rating = Rating.query.filter_by(sellername=name).all()

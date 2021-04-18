@@ -5,7 +5,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from atomicBroadcastServer import AtomicBroadcast
 
-UDP_IP = ["34.68.92.73", "35.193.31.141", "35.197.116.39"]
+UDP_IP = ["34.68.70.103", "35.225.45.119", "34.82.94.22"]
 currentip = "0.0.0.0"
 
 UDP_PORT = 5002

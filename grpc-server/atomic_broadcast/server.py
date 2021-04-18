@@ -7,7 +7,7 @@ from atomicBroadcastServer import AtomicBroadcast
 
 # UDP_IP = "104.198.242.219"
 # UDP_IP = ["0.0.0.0"]
-UDP_IP = ["35.193.31.141", "34.122.75.220", "35.197.116.39"]
+UDP_IP = ["35.225.45.119", "35.224.252.120", "34.82.94.22"]
 currentip = "0.0.0.0"
 UDP_PORT = 5010
 sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)  # UDP
