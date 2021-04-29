@@ -7,6 +7,7 @@ rm -f *.storage
 rm -f *.state_machine
 
 # Start
-python node.py --node "8000" --cluster "8000 8001 8002" &
-python node.py --node "8001" --cluster "8000 8001 8002" &
-python node.py --node "8002" --cluster "8000 8001 8002" &
+python node.py --node "10.0.0.35" --cluster "5000 5000 5000" &
+python node.py --node "10.0.0.36" --cluster "5000 5000 5000" &
+python node.py --node "10.0.0.37" --cluster "5000 5000 5000" &
+

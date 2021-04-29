@@ -40,8 +40,8 @@ if __name__ == '__main__':
     parser.add_argument('--cluster')
     args = parser.parse_args()
 
-    cluster = ['127.0.0.1:{}'.format(port) for port in args.cluster.split()]
-    node = '127.0.0.1:{}'.format(args.node)
+    cluster = ['0.0.0.0:{}'.format(port) for port in args.cluster.split()]
+    node = '0.0.0.0:{}'.format(args.node)
 
     raftos.configure({
         'log_path': '35.209.30.130:8080/_status/raft',
