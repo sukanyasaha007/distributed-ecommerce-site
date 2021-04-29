@@ -14,7 +14,7 @@ Base.metadata.create_all(engine)
 session = DBSession()
 
 # UDP_IP = "35.224.63.87"
-UDP_IP = ["34.68.70.103", "35.225.45.119", "35.224.252.120", "34.82.94.22"]
+UDP_IP = ["35.226.221.169", "34.66.0.82", "34.70.217.20", "34.83.204.4"]
 UPD_PORTS = [5010, 5001, 5002, 5003]
 UNHEALTHY_UPD_PORTS = []
 sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)  # UDP
