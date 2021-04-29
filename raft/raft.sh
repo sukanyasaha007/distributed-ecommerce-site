@@ -18,3 +18,5 @@ cockroach start-single-node --insecure --listen-addr=0.0.0.0:26257 --http-addr=0
     cockroach quit --insecure --host=localhost:25262
 # set up zone
 SET CLUSTER SETTING server.remote_debugging.mode = 'any';
+
+import mysqldump 'https://storage.googleapis.com/ds-assignment-storage/assignment4_20210331.sql';

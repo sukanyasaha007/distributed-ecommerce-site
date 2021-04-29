@@ -44,7 +44,7 @@ if __name__ == '__main__':
     node = '127.0.0.1:{}'.format(args.node)
 
     raftos.configure({
-        'log_path': './',
+        'log_path': '35.209.30.130:8080/_status/raft',
         'serializer': raftos.serializers.JSONSerializer
     })
 
