@@ -57,8 +57,8 @@ def admin(authData):
     resp_time= start_timer()
     if authData["isAuthenticated"]:
         name= authData["userName"]
-        seller_data= Register.query.filter_by(username= name).first()
-        products= Addproduct.query.filter_by(seller= seller_data.username).all()
+        # seller_data= Register.query.filter_by(username= name).first()
+        products= Addproduct.query.filter_by(seller= authData["name"]).all()
     # print(name, products)
     # products = Addproduct.query.all()
         stop_timer(resp_time, "seller_landing_page_loading")
