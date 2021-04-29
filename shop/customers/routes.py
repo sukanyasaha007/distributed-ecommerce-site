@@ -70,7 +70,7 @@ def payment(authData):
     # )
     buyer_data= Register.query.filter_by(username= authData["userName"]).first()
     # print("buyer_data.id", buyer_data.id)
-    orders =  CustomerOrder.query.filter_by(customer_id = buyer_data.id,invoice=invoice).order_by(CustomerOrder.id.desc()).first()
+    orders =  CustomerOrder.query.filter_by(invoice=invoice).order_by(CustomerOrder.id.desc()).first()
     orders.status = 'Paid'
     db.session.commit()
     result = makeTransaction(order=invoice)
