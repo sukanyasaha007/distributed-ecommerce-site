@@ -31,7 +31,8 @@ def auth_required(fn):
         authData = {
             "isAuthenticated": False,
             "userName": None,
-            "email" : None
+            "email" : None,
+            "name": None
         }
 
         if authToken:
