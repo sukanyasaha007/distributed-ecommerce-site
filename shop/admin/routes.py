@@ -31,15 +31,17 @@ def auth_required(fn):
         authData = {
             "isAuthenticated": False,
             "userName": None,
-
+            "email" : None
         }
 
         if authToken:
             try:
                 jwtData = jwt.decode(jwt=authToken, key=app.config["JWT_SECRET_KEY"], verify=True, algorithms="HS256")
-                # print(jwtData)
+                print(jwtData)
                 authData["isAuthenticated"] = True
                 authData["userName"] = jwtData["user_name"]
+                authData["email"] = jwtData["email"]
+                authData["name"] = jwtData["name"]
 
             except Exception as e:
                 print("jwt varification failed: ", e)
@@ -86,7 +88,7 @@ def admin_login():
                                 city=user.buyer_city, contact=user.buyer_contact, address=user.buyer_address,
                                 zipcode=user.buyer_zipcode, itemspurchased=user.items_purchased)
             stop_timer(resp_time, "admin_login")
-            token = jwt.encode({"user_name": user.buyer_username, "user_type": "seller"}, app.config["JWT_SECRET_KEY"], algorithm="HS256")
+            token = jwt.encode({"user_name": user.buyer_username, "user_type": "seller", "email" : request.json["email"], "name": user.buyer_name}, app.config["JWT_SECRET_KEY"], algorithm="HS256")
             session["logged_in"]=True
             # if user.is_active == "true":
             #     login_user(newUser)
@@ -164,6 +166,7 @@ def seller_products(authData):
 
 def getRatingCount(name):
     rating = Rating.query.filter_by(sellername=name).all()
+    print("Ratinggggg", name)
     if(len(rating) > 0):
         like = 0
         dislike = 0
@@ -181,11 +184,13 @@ def getRatingCount(name):
 def sold_products(authData):
     resp_time= start_timer()
     if authData["isAuthenticated"]:
-        name= authData["userName"]
+        name = authData["userName"]
+        email = authData["email"]
         print("Inside soldproducts")
-        soldproducts= SoldProducts.query.filter_by(name= name).all()
+        soldproducts= SoldProducts.query.filter_by(email= email).all()
+        print(soldproducts)
         print("after query for solditems", soldproducts)
-        like, dislike = getRatingCount(name)
+        like, dislike = getRatingCount(authData["name"])
         sold_quant={}
         current_stock= {}
         if(len(soldproducts) > 0):
