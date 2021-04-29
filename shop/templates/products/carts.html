@@ -19,7 +19,7 @@
                 <th>Delete</th>
             </thead>
             <tbody>
-                {% for key, product in session['Shoppingcart'].items() %}
+                {% for key, product in cart.items() %}
                 {% set discount =(product.discount/100) * product.price|float %}
                 <tr>
                     <td>{{loop.index}}</td>
@@ -39,7 +39,7 @@
                     
                     </td>
                     <td>${{"%.2f"|format(product.price)}}</td>
-                    <td> <input type="number" name="quantity" min="1" max="10" value="{{product.quantity}}"> </td>
+                    <td> <input type="number" name="quantity" min="1" value="{{product.quantity}}"> </td>
                     {% if product.discount  %}
                     <td>{{product.discount}} % &nbsp; &nbsp; is {{"%.2f"|format(discount)}}</td>
                     {% else %}

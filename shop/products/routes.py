@@ -24,24 +24,24 @@ def categories():
 
 
 
-@app.route('/')
-def home():
-    resp_time = start_timer()
-    page = request.args.get('page',1, type=int)
-    products = Addproduct.query.filter(Addproduct.stock > 0).order_by(Addproduct.id.desc()).paginate(page=page, per_page=8)
-    stop_timer(resp_time, "getHomePage")
-    return render_template('products/index.html', products=products,brands=brands(),categories=categories())
+# @app.route('/')
+# def home():
+#     resp_time = start_timer()
+#     page = request.args.get('page',1, type=int)
+#     products = Addproduct.query.filter(Addproduct.stock > 0).order_by(Addproduct.id.desc()).paginate(page=page, per_page=8)
+#     stop_timer(resp_time, "getHomePage")
+#     return render_template('products/index.html', products=products,brands=brands(),categories=categories())
 
 @app.route('/result')
 def result():
     resp_time = start_timer()
     searchword = request.args.get('q')
-    s = SearchProductRequestByDesc(searchword=searchword)
-    test = grpc_client.getProductsBySearchword(s)
-    for x in test.products: print(x)
-    # products = Addproduct.query.msearch(searchword, fields=['name','desc'] , limit=6)
+    # s = SearchProductRequestByDesc(searchword=searchword)
+    # test = grpc_client.getProductsBySearchword(s)
+    # for x in test.products: print(x)
+    products = Addproduct.query.msearch(searchword, fields=['name','desc'] , limit=6)
     stop_timer(resp_time, "searchProducts")
-    return render_template('products/result.html',products=test.products,brands=brands(),categories=categories())
+    return render_template('products/result.html',products=products,brands=brands(),categories=categories())
 
 def getAvgRatingCount(name):
     rating = Rating.query.filter_by(sellername=name).all()
@@ -288,7 +288,6 @@ def updateproduct(authData, id):
     category = product.category.name
     stop_timer(resp_time, "updateProduct")
     return render_template('products/addproduct.html', form=form, title='Update Product',getproduct=product, brands=brands,categories=categories)
-
 
 @app.route('/deleteproduct/<int:id>', methods=['GET','POST'])
 def deleteproduct(id):

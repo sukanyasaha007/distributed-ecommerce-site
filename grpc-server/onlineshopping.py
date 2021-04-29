@@ -1,15 +1,10 @@
 # recommendations/buyerActions.py
-from datetime import datetime
 from concurrent import futures
 import grpc
 import logging
 
 import onlineshopping_pb2_grpc
 from BuyerActionService import BuyerActionService
-
-import seller_pb2_grpc
-from SellerActions import SellerActionService
-import os
 
 # _PORT = os.environ["PORT"]
 _PORT = 50051
@@ -20,12 +15,7 @@ def serve():
     onlineshopping_pb2_grpc.add_BuyerActionsServicer_to_server(
         BuyerActionService(), server
     )
-    seller_pb2_grpc.add_SellerServicer_to_server(
-        SellerActionService(), server
-    )
     server.add_insecure_port(f"[::]:{_PORT}")
-    # server.add_insecure_port("[::]:50051")
-
     server.start()
     server.wait_for_termination()
 

@@ -6,11 +6,23 @@ from datetime import datetime
 from sqlalchemy.orm import sessionmaker, relationship
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
-import os
-# engine = create_engine('mysql+pymysql://root:@34.67.70.132/onlineshopping')
+# engine = create_engine('mysql+pymysql://root:pass@host.docker.internal:3325/onlineshopping')
 # engine = create_engine('mysql+pymysql://root:my-secret-pw@host.docker.internal:3306/onlineshopping')
+try:
+    engine = create_engine('mysql+pymysql://nmk:pass@34.72.107.87:3306/onlineshopping',
+                           connect_args={'connect_timeout': 10})
+except Exception as e:
+    try:
+        engine = create_engine('mysql+pymysql://nmk:pass@34.70.33.187:3306/onlineshopping',
+                               connect_args={'connect_timeout': 10})
+    except Exception as e:
+        try:
+            engine = create_engine('mysql+pymysql://nmk:pass@34.105.73.222:3306/onlineshopping',
+                                   connect_args={'connect_timeout': 10})
+        except Exception as e:
+            engine = create_engine('mysql+pymysql://nmk:pass@35.247.71.21:3306/onlineshopping',
+                                   connect_args={'connect_timeout': 10})
 
-engine = create_engine(os.environ.get("MYSQL_CONNECTION_STRING"))
 Base = declarative_base()
 DBSession = sessionmaker(bind=engine)
 
