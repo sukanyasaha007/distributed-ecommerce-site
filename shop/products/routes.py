@@ -271,7 +271,7 @@ def updateproduct(authData, id):
         if authData["isAuthenticated"]:
             seller_user_name= authData["userName"]
             seller_name= Register.query.filter_by(username= seller_user_name).first()
-            if not SoldProducts.query.filter_by(name=seller_name.name):
+            if not SoldProducts.query.filter_by(name=seller_name.username):
                 soldproducts = SoldProducts(name=seller_name, email=seller_name.email, product=product.name, quantity_sold=0)
                 print(soldproducts)
                 db.session.add(soldproducts)
