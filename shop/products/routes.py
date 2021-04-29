@@ -185,7 +185,7 @@ def addproduct(authData):
         if Addproduct.query.filter_by(name= name).first():
             flash(f'The product {name} product exists already. please add some other product', 'success')
             return redirect(url_for('admin'))
-        seller_data= Register.query.filter_by(username= authData["userName"]).first()
+        # seller_data= Register.query.filter_by(username= authData["userName"]).first()
         seller= authData["userName"]
         price = form.price.data
         discount = form.discount.data
@@ -237,9 +237,9 @@ def updateproduct(authData, id):
     category = request.form.get('category')
     if request.method =="POST":
         product.name = form.name.data
-        seller_data= Register.query.filter_by(username= authData["userName"]).first()
-        print(seller_data.name)
-        product.seller= seller_data.name
+        # seller_data= Register.query.filter_by(username= authData["userName"]).first()
+        # print(seller_data.name)
+        product.seller= authData["userName"]
         product.price = form.price.data
         product.discount = form.discount.data
         product.stock = form.stock.data
