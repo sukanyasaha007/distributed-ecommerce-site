@@ -4,7 +4,7 @@ from pysyncobj.batteries import ReplCounter, ReplDict
 
 class MyCounter(SyncObj):
 	def __init__(self):
-		super(MyCounter, self).__init__('10.0.0.26:5000', ['10.0.0.27:6000', '10.0.0.28:7000'])
+		super(MyCounter, self).__init__('10.0.0.35:5000', ['10.0.0.36:6000', '10.0.0.37:7000'])
 		self.__counter = 0
 		self.selfNode= '10.0.0.26:5000'
 
