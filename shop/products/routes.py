@@ -206,9 +206,9 @@ def addproduct(authData):
         
         if authData["isAuthenticated"]:
             seller_user_name= authData["userName"]
-            seller_data= Register.query.filter_by(username= seller_user_name).first()
+            # seller_data= Register.query.filter_by(username= seller_user_name).first()
             # print(seller_data.name)
-            soldproducts = SoldProducts(id=id, name=seller_data.name, email=seller_data.email, product=name, quantity_sold=0, stock=stock)
+            soldproducts = SoldProducts(id=id, name=authData["name"], email=authData["email"], product=name, quantity_sold=0, stock=stock)
             # print(soldproducts)
             db.session.add(soldproducts)
             db.session.commit()
