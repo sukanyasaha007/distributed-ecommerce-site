@@ -7,7 +7,7 @@ from atomicBroadcastServer import AtomicBroadcast
 
 # UDP_IP = "104.198.242.219"
 # UDP_IP = ["0.0.0.0"]
-UDP_IP = ["35.225.45.119", "35.224.252.120", "34.82.94.22"]
+UDP_IP = ["34.66.0.82", "34.70.217.20", "34.83.204.4"]
 currentip = "0.0.0.0"
 UDP_PORT = 5010
 sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)  # UDP
@@ -22,7 +22,7 @@ recieve = {}
 recieveBuffer = []
 sendBuffer = []
 
-engine = create_engine('mysql+pymysql://nmk:pass@35.238.64.48:3306/onlineshopping')
+engine = create_engine('mysql+pymysql://nmk:pass@35.224.231.235:3306/onlineshopping')
 # engine = create_engine('mysql+pymysql://root:pass@host.docker.internal:3325/onlineshopping')
 DBSession = sessionmaker(bind=engine)
 Base.metadata.create_all(engine)

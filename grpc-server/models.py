@@ -9,18 +9,18 @@ from sqlalchemy.ext.declarative import declarative_base
 # engine = create_engine('mysql+pymysql://root:pass@host.docker.internal:3325/onlineshopping')
 # engine = create_engine('mysql+pymysql://root:my-secret-pw@host.docker.internal:3306/onlineshopping')
 try:
-    engine = create_engine('mysql+pymysql://nmk:pass@34.72.107.87:3306/onlineshopping',
+    engine = create_engine('mysql+pymysql://nmk:pass@35.224.231.235:3306/onlineshopping',
                            connect_args={'connect_timeout': 10})
 except Exception as e:
     try:
-        engine = create_engine('mysql+pymysql://nmk:pass@34.70.33.187:3306/onlineshopping',
+        engine = create_engine('mysql+pymysql://nmk:pass@35.188.26.94:3306/onlineshopping',
                                connect_args={'connect_timeout': 10})
     except Exception as e:
         try:
-            engine = create_engine('mysql+pymysql://nmk:pass@34.105.73.222:3306/onlineshopping',
+            engine = create_engine('mysql+pymysql://nmk:pass@34.82.31.236:3306/onlineshopping',
                                    connect_args={'connect_timeout': 10})
         except Exception as e:
-            engine = create_engine('mysql+pymysql://nmk:pass@35.247.71.21:3306/onlineshopping',
+            engine = create_engine('mysql+pymysql://nmk:pass@35.203.178.98:3306/onlineshopping',
                                    connect_args={'connect_timeout': 10})
 
 Base = declarative_base()
