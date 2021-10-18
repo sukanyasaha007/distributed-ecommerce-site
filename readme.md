@@ -8,7 +8,7 @@
 
 ![Untitled](/images/assignment%202%20architechture.png)
 ## Framework
-    1. Buyer side- Rest using Flask
+    1. Buyer side- REST using Flask
     2. Seller Side- REST using Flask
     3. GRPC to interact with database
     4. SOAp server for financial transaction
